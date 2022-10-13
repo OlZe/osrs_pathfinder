@@ -1,3 +1,5 @@
+package cooksImplementation;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -15,14 +17,29 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Arrays;
-import java.util.Scanner;
-import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 
-// this class runs the HttpServer and hands off requests to PathLogic
+/*
+    EXAMPLE API CALLS
+
+    Lumbridge, 1 Tile
+        http://localhost:8128/path.json?from=3221,3219&to=3222,3219
+
+    Lumbridge to Goblins
+        http://localhost:8128/path.json?from=3221,3219&to=3246,3243
+
+    Lumbridge to Varrock Square
+        http://localhost:8128/path.json?from=3221,3219&to=3212,3430
+
+
+
+ */
+
+
+
+
+// this class runs the HttpServer and hands off requests to cooksImplementation.PathLogic
 public class Pathfinder {
     static Gson gson = new Gson();
     public static void main(String[] args) throws Exception {
@@ -50,7 +67,7 @@ public class Pathfinder {
         return result;
     }
 
-    // this hands off requests to path.json to PathLogic.
+    // this hands off requests to path.json to cooksImplementation.PathLogic.
     // much of this is copied from the interwebs
     static class MyHandler implements HttpHandler {
         @Override
@@ -521,7 +538,7 @@ class PathLogic {
 }
 
 // these are basically JSON specifications for the return format.
-// PathfinderResult is the top-level one.
+// cooksImplementation.PathfinderResult is the top-level one.
 class Coordinate {
     public int x;
     public int y;
