@@ -19,11 +19,126 @@ public class WalkableGraphBuilder {
         final WalkableGraphBuilder b = new WalkableGraphBuilder();
         final MovementJson movementJson = b.deserializeJsonFile();
         final Map<Point, TileObstacles> tiles = b.jsonDataToMapOfTiles(movementJson);
+        final Map<Point, GraphNode> graph = b.mapOfTilesToLinkedGraph(tiles);
 
+    }
 
+    /**
+     * @param tileMap A Map of Tiles
+     * @return A linked Graph
+     */
+    private Map<Point, GraphNode> mapOfTilesToLinkedGraph(Map<Point, TileObstacles> tileMap) {
+        Map<Point, GraphNode> graph = new HashMap<>();
 
+        for (Map.Entry<Point, TileObstacles> tile : tileMap.entrySet()) {
+            final Point point = tile.getKey();
 
+            final GraphNode node = new GraphNode(point);
+            graph.put(point, node);
 
+            // Check if there are neighbors in graph, if so link them if traversable
+            // North
+            final GraphNode northNode = graph.get(point.moveNorth());
+            if (northNode != null && this.canMoveNorth(point, tileMap)) {
+                node.linkBidirectional(northNode);
+            }
+
+            // East
+            final GraphNode eastNode = graph.get(point.moveEast());
+            if (eastNode != null && this.canMoveEast(point, tileMap)) {
+                node.linkBidirectional(eastNode);
+            }
+
+            // South
+            final GraphNode southNode = graph.get(point.moveSouth());
+            if (southNode != null && this.canMoveSouth(point, tileMap)) {
+                node.linkBidirectional(southNode);
+            }
+
+            // West
+            final GraphNode westNode = graph.get(point.moveWest());
+            if (westNode != null && this.canMoveWest(point, tileMap)) {
+                node.linkBidirectional(westNode);
+            }
+
+            // North East
+            final GraphNode northEastNode = graph.get(point.moveNorth().moveEast());
+            if (northEastNode != null && this.canMoveNorthEast(point, tileMap)) {
+                node.linkBidirectional(northEastNode);
+            }
+
+            // South East
+            final GraphNode southEastNode = graph.get(point.moveSouth().moveEast());
+            if (southEastNode != null && this.canMoveSouthEast(point, tileMap)) {
+                node.linkBidirectional(southEastNode);
+            }
+
+            // South West
+            final GraphNode southWestNode = graph.get(point.moveSouth().moveWest());
+            if (southWestNode != null && this.canMoveSouthWest(point, tileMap)) {
+                node.linkBidirectional(southWestNode);
+            }
+            
+            // North West
+            final GraphNode northWestNode = graph.get(point.moveNorth().moveWest());
+            if (northWestNode != null && this.canMoveNorthWest(point, tileMap)) {
+                node.linkBidirectional(northWestNode);
+            }
+        }
+
+        return graph;
+    }
+
+    private boolean canMoveNorth(Point point, Map<Point, TileObstacles> tileMap) {
+        final TileObstacles northTileObstacles = tileMap.get(point.moveNorth());
+        final TileObstacles originTileObstacles = tileMap.get(point);
+        return northTileObstacles != null && !originTileObstacles.northBlocked && !northTileObstacles.southBlocked;
+    }
+
+    private boolean canMoveEast(Point point, Map<Point, TileObstacles> tileMap) {
+        final TileObstacles eastTileObstacles = tileMap.get(point.moveEast());
+        final TileObstacles originTileObstacles = tileMap.get(point);
+        return eastTileObstacles != null && !originTileObstacles.eastBlocked && !eastTileObstacles.westBlocked;
+    }
+
+    private boolean canMoveSouth(Point point, Map<Point, TileObstacles> tileMap) {
+        final TileObstacles southTileObstacles = tileMap.get(point.moveSouth());
+        final TileObstacles originTileObstacles = tileMap.get(point);
+        return southTileObstacles != null && !originTileObstacles.southBlocked && !southTileObstacles.northBlocked;
+    }
+
+    private boolean canMoveWest(Point point, Map<Point, TileObstacles> tileMap) {
+        final TileObstacles westTileObstacles = tileMap.get(point.moveWest());
+        final TileObstacles originTileObstacles = tileMap.get(point);
+        return westTileObstacles != null && !originTileObstacles.westBlocked && !westTileObstacles.eastBlocked;
+    }
+
+    private boolean canMoveNorthEast(Point point, Map<Point, TileObstacles> tileMap) {
+        return this.canMoveEast(point, tileMap) &&
+                this.canMoveNorth(point.moveEast(), tileMap) &&
+                this.canMoveNorth(point, tileMap) &&
+                this.canMoveEast(point.moveNorth(), tileMap);
+    }
+
+    private boolean canMoveSouthEast(Point point, Map<Point, TileObstacles> tileMap) {
+        return this.canMoveEast(point, tileMap) &&
+                this.canMoveSouth(point.moveEast(), tileMap) &&
+                this.canMoveSouth(point, tileMap) &&
+                this.canMoveEast(point.moveSouth(), tileMap);
+    }
+
+    private boolean canMoveSouthWest(Point point, Map<Point, TileObstacles> tileMap) {
+        return this.canMoveWest(point, tileMap) &&
+                this.canMoveSouth(point.moveWest(), tileMap) &&
+                this.canMoveSouth(point, tileMap) &&
+                this.canMoveWest(point.moveSouth(), tileMap);
+    }
+
+    private boolean canMoveNorthWest(Point point, Map<Point, TileObstacles> tileMap) {
+        return this.canMoveWest(point, tileMap) &&
+                this.canMoveNorth(point.moveWest(), tileMap) &&
+                this.canMoveNorth(point, tileMap) &&
+                this.canMoveWest(point.moveNorth(), tileMap);
     }
 
     /**
@@ -66,8 +181,9 @@ public class WalkableGraphBuilder {
 
     /**
      * Reads the file "movement.json"
+     *
      * @return The content of "movement.json" in an Object
-     * @throws IOException
+     * @throws IOException brrr
      */
     private MovementJson deserializeJsonFile() throws IOException {
         BufferedReader jsonFile = Files.newBufferedReader(Path.of(MOVEMENT_FILE_PATH), StandardCharsets.UTF_8);
@@ -77,7 +193,7 @@ public class WalkableGraphBuilder {
     /**
      * This class is only used to build the graph
      */
-    private class TileObstacles {
+    private static class TileObstacles {
         public boolean northBlocked;
         public boolean eastBlocked;
         public boolean southBlocked;
