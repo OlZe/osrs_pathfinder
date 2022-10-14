@@ -12,14 +12,26 @@ public class GraphNode {
         this.neighbors = new LinkedList<>();
     }
 
+    /**
+     * Adds newNeighbour as a neighbour. Bidirectional
+     * @param newNeighbour The new neighbour
+     */
     public void linkBidirectional(GraphNode newNeighbour) {
         this.neighbors.add(newNeighbour);
         newNeighbour.neighbors.add(this);
     }
 
     /**
+     * Adds newNeighbour as a neighbour. Unidirectional
+     * @param newNeighbour The new neighbour
+     */
+    public void linkTo(GraphNode newNeighbour) {
+        this.neighbors.add(newNeighbour);
+    }
+
+    /**
      * Slow, for debugging only
-     * @return
+     * @return Representation with coordinates and in which direction walking is possible
      */
     @Override
     public String toString() {

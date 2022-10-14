@@ -6,8 +6,8 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) throws IOException {
 
-        final WalkableGraphBuilder builder = new WalkableGraphBuilder();
-        final Map<Point, GraphNode> graph = builder.readFileAndBuildGraph();
+        final GraphBuilder builder = new GraphBuilder();
+        final Map<Point, GraphNode> graph = builder.buildGraph();
 
         final PathFinder pathFinder = new PathFinder();
 

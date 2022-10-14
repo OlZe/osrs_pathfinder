@@ -1,55 +1,87 @@
 package myImplementation;
 
-import com.google.gson.Gson;
 import myImplementation.jsonClasses.movement.MovementJson;
 import myImplementation.jsonClasses.movement.PointJson;
+import myImplementation.jsonClasses.movement.TransportJson;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WalkableGraphBuilder {
-    private final static String MOVEMENT_FILE_PATH = "movement.json";
+public class GraphBuilder {
 
     /**
      * Reads the json file and builds a graph structure
+     *
      * @return A HashMap where each coordinate is mapped to its direct neighbours through a linked list
      * @throws IOException can't read file
      */
-    public Map<Point, GraphNode> readFileAndBuildGraph() throws IOException {
+    public Map<Point, GraphNode> buildGraph() throws IOException {
         // Deserialize Json
-        System.out.print("Graph Builder: deserializing json: ");
-        final long startTimeDeserialize = System.currentTimeMillis();
-        final MovementJson movementJson = this.deserializeJsonFile();
-        final long endTimeDeserialize = System.currentTimeMillis();
-        System.out.println((endTimeDeserialize - startTimeDeserialize) + "ms");
+        System.out.print("Graph Builder: deserializing movement data: ");
+        final long startTimeDeserializeMovement = System.currentTimeMillis();
+        final MovementJson movementJson = new DataDeserializer().deserializeMovementData();
+        final long endTimeDeserializeMovement = System.currentTimeMillis();
+        System.out.println((endTimeDeserializeMovement - startTimeDeserializeMovement) + "ms");
 
         // Build Tile Map
         System.out.print("Graph Builder: building tile map: ");
         final long startTimeTileMap = System.currentTimeMillis();
-        final Map<Point, WalkableGraphBuilder.TileObstacles> tiles = this.jsonDataToMapOfTiles(movementJson);
+        final Map<Point, GraphBuilder.TileObstacles> tiles = this.movementDataToMapOfTiles(movementJson);
         final long endTimeTileMap = System.currentTimeMillis();
         System.out.println((endTimeTileMap - startTimeTileMap) + "ms");
 
-        // Build graph
-        System.out.print("Graph Builder: building linked graph: ");
+        // Build walkable graph
+        System.out.print("Graph Builder: building walkable graph: ");
         final long startTimeBuildGraph = System.currentTimeMillis();
-        final Map<Point, GraphNode> graph = this.mapOfTilesToLinkedGraph(tiles);
+        final Map<Point, GraphNode> graph = this.mapOfTilesToWalkableGraph(tiles);
         final long endTimeBuildGraph = System.currentTimeMillis();
         System.out.println((endTimeBuildGraph - startTimeBuildGraph) + "ms");
 
-        System.out.println("Graph Builder: total: " + (endTimeBuildGraph - startTimeDeserialize) + "ms");
+        // Deserialize Json
+        System.out.print("Graph Builder: deserializing transports data: ");
+        final long startTimeDeserializeTransports = System.currentTimeMillis();
+        final TransportJson[] transportsJson = new DataDeserializer().deserializeTransportData();
+        final long endTimeDeserializeTransports = System.currentTimeMillis();
+        System.out.println((endTimeDeserializeTransports - startTimeDeserializeTransports) + "ms");
+
+        // Add Transports to Graph
+        System.out.print("Graph Builder: adding transports: ");
+        final long startTimeAddTransports = System.currentTimeMillis();
+        this.addTransports(graph, transportsJson);
+        final long endTimeAddTransports = System.currentTimeMillis();
+        System.out.println((endTimeAddTransports - startTimeAddTransports) + "ms");
+
+        System.out.println("Graph Builder: total: " + (endTimeAddTransports - startTimeDeserializeMovement) + "ms");
         return graph;
     }
 
     /**
-     * @param tileMap A Map of Tiles
-     * @return A linked Graph
+     * adds point-to-point transports (fairy rings etc.) into the graph.
+     * Does NOT include teleports!
+     * @param graph The graph of just walkable nodes
+     * @param transports The deserialized transport data
      */
-    private Map<Point, GraphNode> mapOfTilesToLinkedGraph(Map<Point, TileObstacles> tileMap) {
+    private void addTransports(Map<Point, GraphNode> graph, TransportJson[] transports) {
+        for(TransportJson transport : transports) {
+            if(transport.start == null) {
+                // This transport is a teleport, skip it
+                continue;
+            }
+
+            final GraphNode start = graph.get(new Point(transport.start.x, transport.start.y));
+            final GraphNode end = graph.get(new Point(transport.end.x, transport.end.y));
+            if(start != null && end != null) {
+                start.linkTo(end);
+            }
+        }
+    }
+
+    /**
+     * @param tileMap A Map of Tiles
+     * @return A Graph linking all walkable tiles together
+     */
+    private Map<Point, GraphNode> mapOfTilesToWalkableGraph(Map<Point, TileObstacles> tileMap) {
         Map<Point, GraphNode> graph = new HashMap<>();
 
         for (Map.Entry<Point, TileObstacles> tile : tileMap.entrySet()) {
@@ -100,7 +132,7 @@ public class WalkableGraphBuilder {
             if (southWestNode != null && this.canMoveSouthWest(point, tileMap)) {
                 node.linkBidirectional(southWestNode);
             }
-            
+
             // North West
             final GraphNode northWestNode = graph.get(point.moveNorth().moveWest());
             if (northWestNode != null && this.canMoveNorthWest(point, tileMap)) {
@@ -165,11 +197,10 @@ public class WalkableGraphBuilder {
 
     /**
      * Processes the rather stupidly made json format into a single data structure containing all Tile coordinates and Obstacles
-     *
      * @param movementJson The populated Object representing movement.json
      * @return A map where each coordinate has its own obstacle Data
      */
-    private Map<Point, TileObstacles> jsonDataToMapOfTiles(MovementJson movementJson) {
+    private Map<Point, TileObstacles> movementDataToMapOfTiles(MovementJson movementJson) {
         HashMap<Point, TileObstacles> tiles = new HashMap<>();
 
         // Parse walkable json tiles
@@ -199,17 +230,6 @@ public class WalkableGraphBuilder {
         }
 
         return tiles;
-    }
-
-    /**
-     * Reads the file "movement.json"
-     *
-     * @return The content of "movement.json" in an Object
-     * @throws IOException brrr
-     */
-    private MovementJson deserializeJsonFile() throws IOException {
-        BufferedReader jsonFile = Files.newBufferedReader(Path.of(MOVEMENT_FILE_PATH), StandardCharsets.UTF_8);
-        return new Gson().fromJson(jsonFile, MovementJson.class);
     }
 
     /**
