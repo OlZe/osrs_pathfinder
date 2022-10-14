@@ -72,7 +72,7 @@ public class GraphBuilder {
             final GraphNode start = graph.get(new Point(transport.start.x, transport.start.y));
             final GraphNode end = graph.get(new Point(transport.end.x, transport.end.y));
             if(start != null && end != null) {
-                start.linkTo(end);
+                start.linkTo(end, transport.title);
             }
         }
     }
@@ -94,49 +94,57 @@ public class GraphBuilder {
             // North
             final GraphNode northNode = graph.get(point.moveNorth());
             if (northNode != null && this.canMoveNorth(point, tileMap)) {
-                node.linkBidirectional(northNode);
+                node.linkTo(northNode, "walk north");
+                northNode.linkTo(node, "walk south");
             }
 
             // East
             final GraphNode eastNode = graph.get(point.moveEast());
             if (eastNode != null && this.canMoveEast(point, tileMap)) {
-                node.linkBidirectional(eastNode);
+                node.linkTo(eastNode, "walk east");
+                eastNode.linkTo(node, "walk west");
             }
 
             // South
             final GraphNode southNode = graph.get(point.moveSouth());
             if (southNode != null && this.canMoveSouth(point, tileMap)) {
-                node.linkBidirectional(southNode);
+                node.linkTo(southNode, "walk south");
+                southNode.linkTo(node, "walk north");
             }
 
             // West
             final GraphNode westNode = graph.get(point.moveWest());
             if (westNode != null && this.canMoveWest(point, tileMap)) {
-                node.linkBidirectional(westNode);
+                node.linkTo(westNode, "walk west");
+                westNode.linkTo(node, "walk east");
             }
 
             // North East
             final GraphNode northEastNode = graph.get(point.moveNorth().moveEast());
             if (northEastNode != null && this.canMoveNorthEast(point, tileMap)) {
-                node.linkBidirectional(northEastNode);
+                node.linkTo(northEastNode, "walk north east");
+                northEastNode.linkTo(node, "walk south west");
             }
 
             // South East
             final GraphNode southEastNode = graph.get(point.moveSouth().moveEast());
             if (southEastNode != null && this.canMoveSouthEast(point, tileMap)) {
-                node.linkBidirectional(southEastNode);
+                node.linkTo(southEastNode, "walk south east");
+                southEastNode.linkTo(node, "walk north west");
             }
 
             // South West
             final GraphNode southWestNode = graph.get(point.moveSouth().moveWest());
             if (southWestNode != null && this.canMoveSouthWest(point, tileMap)) {
-                node.linkBidirectional(southWestNode);
+                node.linkTo(southWestNode, "walk south west");
+                southWestNode.linkTo(node, "walk north east");
             }
 
             // North West
             final GraphNode northWestNode = graph.get(point.moveNorth().moveWest());
             if (northWestNode != null && this.canMoveNorthWest(point, tileMap)) {
-                node.linkBidirectional(northWestNode);
+                node.linkTo(northWestNode, "walk north west");
+                northWestNode.linkTo(node, "walk south east");
             }
         }
 

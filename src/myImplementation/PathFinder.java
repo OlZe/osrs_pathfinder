@@ -10,10 +10,12 @@ public class PathFinder {
      * @param end The end coordinate
      */
     public PathFinderResult findPathBfs(GraphNode start, Point end) {
+        final long startTime = System.currentTimeMillis();
+
         Queue<NodeWithBacktrack> queue = new LinkedList<>();
         Set<GraphNode> expandedNodes = new HashSet<>();
 
-        queue.add(new NodeWithBacktrack(start, null));
+        queue.add(new NodeWithBacktrack(start, null, "start"));
 
         while (queue.peek() != null) {
 
@@ -25,17 +27,18 @@ public class PathFinder {
 
                 // Goal found?
                 if (currentNode.coordinate.equals(end)) {
-                    return this.backtrack(currentNodeWithBacktrack);
+                    return new PathFinderResult(true, this.backtrack(currentNodeWithBacktrack), System.currentTimeMillis() - startTime);
                 }
 
                 // Add neighbours of node into queue
-                for(GraphNode neighbor : currentNode.neighbors) {
-                    queue.add(new NodeWithBacktrack(neighbor, currentNodeWithBacktrack));
+                for(GraphNodeNeighbour neighbor : currentNode.neighbors) {
+                    queue.add(new NodeWithBacktrack(neighbor.node(), currentNodeWithBacktrack, neighbor.methodOfMovement()));
                 }
             }
         }
 
-        return new PathFinderResult(false, null);
+
+        return new PathFinderResult(false, null, System.currentTimeMillis() - startTime);
     }
 
     /**
@@ -43,25 +46,25 @@ public class PathFinder {
      * @param goal The found goal node with backtracking references
      * @return the PathFinder Result
      */
-    private PathFinderResult backtrack(NodeWithBacktrack goal) {
-        List<Point> path = new LinkedList<>();
+    private List<PathFinderResult.Movement> backtrack(NodeWithBacktrack goal) {
+        List<PathFinderResult.Movement> path = new LinkedList<>();
 
         NodeWithBacktrack current = goal;
         while(current.hasPrevious()) {
-            path.add(0,current.node.coordinate);
+            path.add(0,new PathFinderResult.Movement(current.node.coordinate, current.methodOfMovement));
             current = current.previous;
         }
 
         // Reached the start
-        path.add(0,current.node.coordinate);
+        path.add(0,new PathFinderResult.Movement(current.node.coordinate, current.methodOfMovement));
 
-        return new PathFinderResult(true, path);
+        return path;
     }
 
     /**
      * Used internally when pathfinding to backtrack from goal node back to start
      */
-    private record NodeWithBacktrack(GraphNode node, NodeWithBacktrack previous) {
+    private record NodeWithBacktrack(GraphNode node, NodeWithBacktrack previous, String methodOfMovement) {
         public boolean hasPrevious() {
             return this.previous != null;
         }
