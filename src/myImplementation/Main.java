@@ -15,7 +15,9 @@ public class Main {
         while(true) {
             GraphNode start = graph.get(new Point(3228, 3219));
             Point end = new Point(3228, 3219);
-            pathFinder.findPathBfs(start, end);
+            PathFinderResult result = pathFinder.findPathBfs(start, end);
+
+            System.out.println("Need a command here so I can debug and see the result variable");
         }
 
     }
