@@ -14,23 +14,35 @@ import java.util.Map;
 public class WalkableGraphBuilder {
     private final static String MOVEMENT_FILE_PATH = "movement.json";
 
-    public static void main(String[] args) throws IOException {
+    /**
+     * Reads the json file and builds a graph structure
+     * @return A HashMap where each coordinate is mapped to its direct neighbours through a linked list
+     * @throws IOException can't read file
+     */
+    public Map<Point, GraphNode> readFileAndBuildGraph() throws IOException {
+        // Deserialize Json
+        System.out.print("Graph Builder: deserializing json: ");
+        final long startTimeDeserialize = System.currentTimeMillis();
+        final MovementJson movementJson = this.deserializeJsonFile();
+        final long endTimeDeserialize = System.currentTimeMillis();
+        System.out.println((endTimeDeserialize - startTimeDeserialize) + "ms");
 
-        final WalkableGraphBuilder b = new WalkableGraphBuilder();
+        // Build Tile Map
+        System.out.print("Graph Builder: building tile map: ");
+        final long startTimeTileMap = System.currentTimeMillis();
+        final Map<Point, WalkableGraphBuilder.TileObstacles> tiles = this.jsonDataToMapOfTiles(movementJson);
+        final long endTimeTileMap = System.currentTimeMillis();
+        System.out.println((endTimeTileMap - startTimeTileMap) + "ms");
 
+        // Build graph
+        System.out.print("Graph Builder: building linked graph: ");
+        final long startTimeBuildGraph = System.currentTimeMillis();
+        final Map<Point, GraphNode> graph = this.mapOfTilesToLinkedGraph(tiles);
+        final long endTimeBuildGraph = System.currentTimeMillis();
+        System.out.println((endTimeBuildGraph - startTimeBuildGraph) + "ms");
 
-        long startTime = System.currentTimeMillis();
-        final MovementJson movementJson = b.deserializeJsonFile();
-        System.out.println("Deserializing Json: " + (System.currentTimeMillis() - startTime) + "ms");
-
-        startTime = System.currentTimeMillis();
-        final Map<Point, TileObstacles> tiles = b.jsonDataToMapOfTiles(movementJson);
-        System.out.println("Building Tile Map: " + (System.currentTimeMillis() - startTime) + "ms");
-
-        startTime = System.currentTimeMillis();
-        final Map<Point, GraphNode> graph = b.mapOfTilesToLinkedGraph(tiles);
-        System.out.println("Building Linked Graph: " + (System.currentTimeMillis() - startTime) + "ms");
-
+        System.out.println("Graph Builder: total: " + (endTimeBuildGraph - startTimeDeserialize) + "ms");
+        return graph;
     }
 
     /**
