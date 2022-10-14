@@ -1,15 +1,6 @@
 package myImplementation;
 
-import java.util.Objects;
-
-public class Point {
-    public final int x;
-    public final int y;
-
-    public Point(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
+public record Point(int x, int y) {
 
     public Point move(int x, int y) {
         return new Point(this.x + x, this.y + y);
@@ -18,6 +9,7 @@ public class Point {
     public Point moveNorth() {
         return this.move(0, 1);
     }
+
     public Point moveEast() {
         return this.move(1, 0);
     }
@@ -36,11 +28,6 @@ public class Point {
         if (o == null || getClass() != o.getClass()) return false;
         Point point = (Point) o;
         return x == point.x && y == point.y;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(x, y);
     }
 
     @Override
