@@ -17,9 +17,19 @@ public class WalkableGraphBuilder {
     public static void main(String[] args) throws IOException {
 
         final WalkableGraphBuilder b = new WalkableGraphBuilder();
+
+
+        long startTime = System.currentTimeMillis();
         final MovementJson movementJson = b.deserializeJsonFile();
+        System.out.println("Deserializing Json: " + (System.currentTimeMillis() - startTime) + "ms");
+
+        startTime = System.currentTimeMillis();
         final Map<Point, TileObstacles> tiles = b.jsonDataToMapOfTiles(movementJson);
+        System.out.println("Building Tile Map: " + (System.currentTimeMillis() - startTime) + "ms");
+
+        startTime = System.currentTimeMillis();
         final Map<Point, GraphNode> graph = b.mapOfTilesToLinkedGraph(tiles);
+        System.out.println("Building Linked Graph: " + (System.currentTimeMillis() - startTime) + "ms");
 
     }
 
