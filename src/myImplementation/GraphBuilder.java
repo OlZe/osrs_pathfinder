@@ -6,7 +6,9 @@ import myImplementation.jsonClasses.movement.TransportJson;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class GraphBuilder {
 
@@ -16,7 +18,7 @@ public class GraphBuilder {
      * @return A HashMap where each coordinate is mapped to its direct neighbours through a linked list
      * @throws IOException can't read file
      */
-    public Map<Point, GraphNode> buildGraph() throws IOException {
+    public Graph buildGraph() throws IOException {
         // Deserialize Json
         System.out.print("Graph Builder: deserializing movement data: ");
         final long startTimeDeserializeMovement = System.currentTimeMillis();
@@ -32,13 +34,13 @@ public class GraphBuilder {
         System.out.println((endTimeTileMap - startTimeTileMap) + "ms");
 
         // Build walkable graph
-        System.out.print("Graph Builder: building walkable graph: ");
+        System.out.print("Graph Builder: building walkable nodes: ");
         final long startTimeBuildGraph = System.currentTimeMillis();
-        final Map<Point, GraphNode> graph = this.mapOfTilesToWalkableGraph(tiles);
+        final Map<Point, GraphNode> graphNodes = this.mapOfTilesToWalkableGraph(tiles);
         final long endTimeBuildGraph = System.currentTimeMillis();
         System.out.println((endTimeBuildGraph - startTimeBuildGraph) + "ms");
 
-        // Deserialize Json
+        // Deserialize Transport Data
         System.out.print("Graph Builder: deserializing transports data: ");
         final long startTimeDeserializeTransports = System.currentTimeMillis();
         final TransportJson[] transportsJson = new DataDeserializer().deserializeTransportData();
@@ -48,18 +50,44 @@ public class GraphBuilder {
         // Add Transports to Graph
         System.out.print("Graph Builder: adding transports: ");
         final long startTimeAddTransports = System.currentTimeMillis();
-        this.addTransports(graph, transportsJson);
+        this.addTransports(graphNodes, transportsJson);
         final long endTimeAddTransports = System.currentTimeMillis();
         System.out.println((endTimeAddTransports - startTimeAddTransports) + "ms");
 
-        System.out.println("Graph Builder: total: " + (endTimeAddTransports - startTimeDeserializeMovement) + "ms");
+        // find starters
+        System.out.print("Graph Builder: finding starters: ");
+        final long startTimeFindStarters = System.currentTimeMillis();
+        Set<Graph.Starter> starters = this.findStarters(transportsJson);
+        final long endTimeFindStarters = System.currentTimeMillis();
+        System.out.println((endTimeFindStarters - startTimeFindStarters) + "ms");
+
+        final Graph graph = new Graph(graphNodes, starters);
+        System.out.println("Graph Builder: total: " + (System.currentTimeMillis() - startTimeDeserializeMovement) + "ms");
         return graph;
     }
 
     /**
-     * adds point-to-point transports (fairy rings etc.) into the graph.
+     * Finds starters in transport data
+     * @param transportsJson The deserialized transport data
+     * @return All starters
+     */
+    private Set<Graph.Starter> findStarters(TransportJson[] transportsJson) {
+        Set<Graph.Starter> starters = new HashSet<>();
+        for(TransportJson transport : transportsJson) {
+            if(transport.start != null) {
+                // This is a point-to-point transport, not a starter
+                continue;
+            }
+            final Point starterCoordinate = new Point(transport.end.x, transport.end.y);
+            starters.add(new Graph.Starter(starterCoordinate, transport.title));
+        }
+        return starters;
+    }
+
+    /**
+     * links nodes according to point-to-point transports (fairy rings etc.).
      * Does NOT include teleports!
-     * @param graph The graph of just walkable nodes
+     * @param graph The nodes of which just walkable ones have been linked
      * @param transports The deserialized transport data
      */
     private void addTransports(Map<Point, GraphNode> graph, TransportJson[] transports) {
@@ -90,7 +118,7 @@ public class GraphBuilder {
             final GraphNode node = new GraphNode(point);
             graph.put(point, node);
 
-            // Check if there are neighbors in graph, if so link them if traversable
+            // Check if there are neighbouring nodes, if so link them if traversable
             // North
             final GraphNode northNode = graph.get(point.moveNorth());
             if (northNode != null && this.canMoveNorth(point, tileMap)) {

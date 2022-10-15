@@ -5,11 +5,12 @@ import java.util.*;
 public class PathFinder {
 
     /**
-     * Attempts to find a path using Breadth First Search algorithm
+     * Attempts to find a path using Breadth First Search algorithm.
+     * DISREGARDS teleports as it goes from start point to end point
      * @param start The start node
      * @param end The end coordinate
      */
-    public PathFinderResult findPathBfs(GraphNode start, Point end) {
+    public PathFinderResult findPathBfsStartToEnd(GraphNode start, Point end) {
         final long startTime = System.currentTimeMillis();
 
         Queue<NodeWithBacktrack> queue = new LinkedList<>();
