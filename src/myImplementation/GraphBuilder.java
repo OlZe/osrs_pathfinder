@@ -78,6 +78,10 @@ public class GraphBuilder {
                 // This is a point-to-point transport, not a starter
                 continue;
             }
+            if(transport.end.z != 0) {
+                // This starter is out of bounds, skip it
+                continue;
+            }
             final Point starterCoordinate = new Point(transport.end.x, transport.end.y);
             starters.add(new Graph.Starter(starterCoordinate, transport.title));
         }
@@ -94,6 +98,11 @@ public class GraphBuilder {
         for(TransportJson transport : transports) {
             if(transport.start == null) {
                 // This transport is a teleport, skip it
+                continue;
+            }
+
+            if(transport.start.z != 0 || transport.end.z != 0) {
+                // This transport is out of bounds, skip it
                 continue;
             }
 

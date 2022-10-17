@@ -13,4 +13,12 @@ public record Graph(Map<Point, GraphNode> nodes, Set<Starter> starters) {
 
     }
 
+    /**
+     * Empty for faster debugging because IntelliJ would try to represent this huge object as a string and slow down
+     * @return ""
+     */
+    @Override
+    public String toString() {
+        return "";
+    }
 }

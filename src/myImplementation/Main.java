@@ -20,7 +20,7 @@ public class Main {
         while(true) {
             Point start = new Point(3228, 3219);
             Point end = new Point(3228, 3219);
-            PathFinderResult result = pathFinder.findPathBfsEndToStarters(graph, start, end);
+            PathFinderResult result = pathFinder.findPathBfs(graph, start, end);
 
             System.out.println("Need a command here so I can debug and see the result variable");
         }

@@ -11,7 +11,7 @@ public class PathFinder {
      * @param start The start node
      * @param end   The end coordinate
      */
-    public PathFinderResult findPathBfsStartToEnd(GraphNode start, Point end) {
+    public PathFinderResult findPathBfsOnlyStartPos(GraphNode start, Point end) {
         final long startTime = System.currentTimeMillis();
 
         Queue<NodeWithBacktrack> queue = new LinkedList<>();
@@ -43,8 +43,55 @@ public class PathFinder {
     }
 
     /**
+     * Attempts to find a path using Breadth First Search algorithm.
+     * Uses start position and starters
+     *
+     * @param start The start node
+     * @param end   The end coordinate
+     */
+    public PathFinderResult findPathBfs(Graph graph, Point start, Point end) {
+        final long startTime = System.currentTimeMillis();
+
+        Queue<NodeWithBacktrack> queue = new LinkedList<>();
+        Set<GraphNode> expandedNodes = new HashSet<>();
+
+        // Add start point and starters to queue
+        queue.add(new NodeWithBacktrack(graph.nodes().get(start), null, "start"));
+        for(Graph.Starter starter : graph.starters()) {
+            final GraphNode starterNode = graph.nodes().get(starter.coordinate());
+            assert(starterNode != null);
+            queue.add(new NodeWithBacktrack(starterNode, null, starter.title()));
+        }
+
+        while (queue.peek() != null) {
+
+            // Expand next node if new
+            final NodeWithBacktrack currentNodeWithBacktrack = queue.remove();
+            final GraphNode currentNode = currentNodeWithBacktrack.node;
+            if (!expandedNodes.contains(currentNode)) {
+                expandedNodes.add(currentNode);
+
+                // Goal found?
+                if (currentNode.coordinate.equals(end)) {
+                    return new PathFinderResult(true, this.backtrack(currentNodeWithBacktrack), System.currentTimeMillis() - startTime);
+                }
+
+                // Add neighbours of node into queue
+                for (GraphNodeNeighbour neighbor : currentNode.neighbors) {
+                    queue.add(new NodeWithBacktrack(neighbor.node(), currentNodeWithBacktrack, neighbor.methodOfMovement()));
+                }
+            }
+        }
+
+        return new PathFinderResult(false, null, System.currentTimeMillis() - startTime);
+    }
+
+
+
+    /**
      * Attempts to find a path using Breadth First Search Algorithm.
      * Starts at the end goal and keeps looking until it finds either the start point or a starter teleport
+     * WARNING: Doesn't make sense because there's unidirectional transports
      * @param graph The Graph
      * @param start The starting position of the character
      * @param end The destination position
