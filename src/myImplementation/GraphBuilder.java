@@ -54,38 +54,38 @@ public class GraphBuilder {
         final long endTimeAddTransports = System.currentTimeMillis();
         System.out.println((endTimeAddTransports - startTimeAddTransports) + "ms");
 
-        // find starters
-        System.out.print("Graph Builder: finding starters: ");
-        final long startTimeFindStarters = System.currentTimeMillis();
-        Set<Graph.Starter> starters = this.findStarters(transportsJson);
-        final long endTimeFindStarters = System.currentTimeMillis();
-        System.out.println((endTimeFindStarters - startTimeFindStarters) + "ms");
+        // find teleports
+        System.out.print("Graph Builder: finding teleports: ");
+        final long startTimeFindTeleports = System.currentTimeMillis();
+        Set<Teleport> teleports = this.findTeleports(transportsJson);
+        final long endTimeFindTeleports = System.currentTimeMillis();
+        System.out.println((endTimeFindTeleports - startTimeFindTeleports) + "ms");
 
-        final Graph graph = new Graph(graphVertices, starters);
+        final Graph graph = new Graph(graphVertices, teleports);
         System.out.println("Graph Builder: total: " + (System.currentTimeMillis() - startTimeDeserializeMovement) + "ms");
         return graph;
     }
 
     /**
-     * Finds starters in transport data
+     * Finds teleports in transport data
      * @param transportsJson The deserialized transport data
-     * @return All starters
+     * @return All teleports
      */
-    private Set<Graph.Starter> findStarters(TransportJson[] transportsJson) {
-        Set<Graph.Starter> starters = new HashSet<>();
+    private Set<Teleport> findTeleports(TransportJson[] transportsJson) {
+        Set<Teleport> teleports = new HashSet<>();
         for(TransportJson transport : transportsJson) {
             if(transport.start != null) {
-                // This is a point-to-point transport, not a starter
+                // This is a point-to-point transport, not a teleport
                 continue;
             }
             if(transport.end.z != 0) {
-                // This starter is out of bounds, skip it
+                // This teleport is out of bounds, skip it
                 continue;
             }
-            final Coordinate starterCoordinate = new Coordinate(transport.end.x, transport.end.y);
-            starters.add(new Graph.Starter(starterCoordinate, transport.title));
+            final Coordinate teleportCoordinate = new Coordinate(transport.end.x, transport.end.y);
+            teleports.add(new Teleport(teleportCoordinate, transport.title));
         }
-        return starters;
+        return teleports;
     }
 
     /**

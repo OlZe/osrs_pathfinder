@@ -44,7 +44,7 @@ public class PathFinder {
 
     /**
      * Attempts to find a path using Breadth First Search algorithm.
-     * Uses start position and starters
+     * Uses start position and teleports
      *
      * @param start The start vertex
      * @param end   The end coordinate
@@ -55,12 +55,12 @@ public class PathFinder {
         Queue<BacktrackableVertex> queue = new LinkedList<>();
         Set<GraphVertex> expandedVertices = new HashSet<>();
 
-        // Add start coordinate and starters to queue
+        // Add start coordinate and teleports to queue
         queue.add(new BacktrackableVertex(graph.vertices().get(start), null, "start"));
-        for(Graph.Starter starter : graph.starters()) {
-            final GraphVertex starterVertex = graph.vertices().get(starter.coordinate());
-            assert(starterVertex != null);
-            queue.add(new BacktrackableVertex(starterVertex, null, starter.title()));
+        for(Teleport teleport : graph.teleports()) {
+            final GraphVertex teleportVertex = graph.vertices().get(teleport.destination());
+            assert(teleportVertex != null);
+            queue.add(new BacktrackableVertex(teleportVertex, null, teleport.title()));
         }
 
         while (queue.peek() != null) {
@@ -90,7 +90,7 @@ public class PathFinder {
 
     /**
      * Attempts to find a path using Breadth First Search Algorithm.
-     * Starts at the end goal and keeps looking until it finds either the start coordinate or a starter teleport
+     * Starts at the end goal and keeps looking until it finds either the start coordinate or a teleport
      * WARNING: Doesn't make sense because there's unidirectional transports
      * @param graph The Graph
      * @param start The starting position of the character
@@ -121,7 +121,7 @@ public class PathFinder {
                     final BacktrackableVertex s = new BacktrackableVertex(currentVertex, currentBacktrackableVertex, "start");
                     return new PathFinderResult(true, this.backtrack(s), System.currentTimeMillis() - startTime);
                 }
-                final Optional<Graph.Starter> reachedStarter = graph.starters().stream().filter(s -> s.coordinate().equals(currentVertex.coordinate)).findAny();
+                final Optional<Teleport> reachedStarter = graph.teleports().stream().filter(s -> s.destination().equals(currentVertex.coordinate)).findAny();
                 if(reachedStarter.isPresent()) {
                     final BacktrackableVertex s = new BacktrackableVertex(currentVertex, currentBacktrackableVertex, reachedStarter.get().title());
                     return new PathFinderResult(true, this.backtrack(s), System.currentTimeMillis() - startTime);
