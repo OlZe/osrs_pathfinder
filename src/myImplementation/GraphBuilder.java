@@ -1,7 +1,7 @@
 package myImplementation;
 
 import myImplementation.jsonClasses.movement.MovementJson;
-import myImplementation.jsonClasses.movement.PointJson;
+import myImplementation.jsonClasses.movement.CoordinateJson;
 import myImplementation.jsonClasses.movement.TransportJson;
 
 import java.io.IOException;
@@ -29,14 +29,14 @@ public class GraphBuilder {
         // Build Tile Map
         System.out.print("Graph Builder: building tile map: ");
         final long startTimeTileMap = System.currentTimeMillis();
-        final Map<Point, GraphBuilder.TileObstacles> tiles = this.movementDataToMapOfTiles(movementJson);
+        final Map<Coordinate, GraphBuilder.TileObstacles> tiles = this.movementDataToMapOfTiles(movementJson);
         final long endTimeTileMap = System.currentTimeMillis();
         System.out.println((endTimeTileMap - startTimeTileMap) + "ms");
 
         // Build walkable graph
         System.out.print("Graph Builder: building walkable vertices: ");
         final long startTimeBuildGraph = System.currentTimeMillis();
-        final Map<Point, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
+        final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
         final long endTimeBuildGraph = System.currentTimeMillis();
         System.out.println((endTimeBuildGraph - startTimeBuildGraph) + "ms");
 
@@ -82,7 +82,7 @@ public class GraphBuilder {
                 // This starter is out of bounds, skip it
                 continue;
             }
-            final Point starterCoordinate = new Point(transport.end.x, transport.end.y);
+            final Coordinate starterCoordinate = new Coordinate(transport.end.x, transport.end.y);
             starters.add(new Graph.Starter(starterCoordinate, transport.title));
         }
         return starters;
@@ -94,7 +94,7 @@ public class GraphBuilder {
      * @param graph The vertices of which just walkable ones have been linked
      * @param transports The deserialized transport data
      */
-    private void addTransports(Map<Point, GraphVertex> graph, TransportJson[] transports) {
+    private void addTransports(Map<Coordinate, GraphVertex> graph, TransportJson[] transports) {
         for(TransportJson transport : transports) {
             if(transport.start == null) {
                 // This transport is a teleport, skip it
@@ -106,8 +106,8 @@ public class GraphBuilder {
                 continue;
             }
 
-            final GraphVertex start = graph.get(new Point(transport.start.x, transport.start.y));
-            final GraphVertex end = graph.get(new Point(transport.end.x, transport.end.y));
+            final GraphVertex start = graph.get(new Coordinate(transport.start.x, transport.start.y));
+            final GraphVertex end = graph.get(new Coordinate(transport.end.x, transport.end.y));
             if(start != null && end != null) {
                 start.addEdgeTo(end, transport.title);
             }
@@ -118,68 +118,68 @@ public class GraphBuilder {
      * @param tileMap A Map of Tiles
      * @return A Graph linking all walkable tiles together
      */
-    private Map<Point, GraphVertex> mapOfTilesToWalkableGraph(Map<Point, TileObstacles> tileMap) {
-        Map<Point, GraphVertex> graph = new HashMap<>();
+    private Map<Coordinate, GraphVertex> mapOfTilesToWalkableGraph(Map<Coordinate, TileObstacles> tileMap) {
+        Map<Coordinate, GraphVertex> graph = new HashMap<>();
 
-        for (Map.Entry<Point, TileObstacles> tile : tileMap.entrySet()) {
-            final Point point = tile.getKey();
+        for (Map.Entry<Coordinate, TileObstacles> tile : tileMap.entrySet()) {
+            final Coordinate coordinate = tile.getKey();
 
-            final GraphVertex vertex = new GraphVertex(point);
-            graph.put(point, vertex);
+            final GraphVertex vertex = new GraphVertex(coordinate);
+            graph.put(coordinate, vertex);
 
             // Check if there are neighbouring vertices, if so link them if traversable
             // North
-            final GraphVertex northVertex = graph.get(point.moveNorth());
-            if (northVertex != null && this.canMoveNorth(point, tileMap)) {
+            final GraphVertex northVertex = graph.get(coordinate.moveNorth());
+            if (northVertex != null && this.canMoveNorth(coordinate, tileMap)) {
                 vertex.addEdgeTo(northVertex, "walk north");
                 northVertex.addEdgeTo(vertex, "walk south");
             }
 
             // East
-            final GraphVertex eastVertex = graph.get(point.moveEast());
-            if (eastVertex != null && this.canMoveEast(point, tileMap)) {
+            final GraphVertex eastVertex = graph.get(coordinate.moveEast());
+            if (eastVertex != null && this.canMoveEast(coordinate, tileMap)) {
                 vertex.addEdgeTo(eastVertex, "walk east");
                 eastVertex.addEdgeTo(vertex, "walk west");
             }
 
             // South
-            final GraphVertex southVertex = graph.get(point.moveSouth());
-            if (southVertex != null && this.canMoveSouth(point, tileMap)) {
+            final GraphVertex southVertex = graph.get(coordinate.moveSouth());
+            if (southVertex != null && this.canMoveSouth(coordinate, tileMap)) {
                 vertex.addEdgeTo(southVertex, "walk south");
                 southVertex.addEdgeTo(vertex, "walk north");
             }
 
             // West
-            final GraphVertex westVertex = graph.get(point.moveWest());
-            if (westVertex != null && this.canMoveWest(point, tileMap)) {
+            final GraphVertex westVertex = graph.get(coordinate.moveWest());
+            if (westVertex != null && this.canMoveWest(coordinate, tileMap)) {
                 vertex.addEdgeTo(westVertex, "walk west");
                 westVertex.addEdgeTo(vertex, "walk east");
             }
 
             // North East
-            final GraphVertex northEastVertex = graph.get(point.moveNorth().moveEast());
-            if (northEastVertex != null && this.canMoveNorthEast(point, tileMap)) {
+            final GraphVertex northEastVertex = graph.get(coordinate.moveNorth().moveEast());
+            if (northEastVertex != null && this.canMoveNorthEast(coordinate, tileMap)) {
                 vertex.addEdgeTo(northEastVertex, "walk north east");
                 northEastVertex.addEdgeTo(vertex, "walk south west");
             }
 
             // South East
-            final GraphVertex southEastVertex = graph.get(point.moveSouth().moveEast());
-            if (southEastVertex != null && this.canMoveSouthEast(point, tileMap)) {
+            final GraphVertex southEastVertex = graph.get(coordinate.moveSouth().moveEast());
+            if (southEastVertex != null && this.canMoveSouthEast(coordinate, tileMap)) {
                 vertex.addEdgeTo(southEastVertex, "walk south east");
                 southEastVertex.addEdgeTo(vertex, "walk north west");
             }
 
             // South West
-            final GraphVertex southWestVertex = graph.get(point.moveSouth().moveWest());
-            if (southWestVertex != null && this.canMoveSouthWest(point, tileMap)) {
+            final GraphVertex southWestVertex = graph.get(coordinate.moveSouth().moveWest());
+            if (southWestVertex != null && this.canMoveSouthWest(coordinate, tileMap)) {
                 vertex.addEdgeTo(southWestVertex, "walk south west");
                 southWestVertex.addEdgeTo(vertex, "walk north east");
             }
 
             // North West
-            final GraphVertex northWestVertex = graph.get(point.moveNorth().moveWest());
-            if (northWestVertex != null && this.canMoveNorthWest(point, tileMap)) {
+            final GraphVertex northWestVertex = graph.get(coordinate.moveNorth().moveWest());
+            if (northWestVertex != null && this.canMoveNorthWest(coordinate, tileMap)) {
                 vertex.addEdgeTo(northWestVertex, "walk north west");
                 northWestVertex.addEdgeTo(vertex, "walk south east");
             }
@@ -188,56 +188,56 @@ public class GraphBuilder {
         return graph;
     }
 
-    private boolean canMoveNorth(Point point, Map<Point, TileObstacles> tileMap) {
-        final TileObstacles northTileObstacles = tileMap.get(point.moveNorth());
-        final TileObstacles originTileObstacles = tileMap.get(point);
+    private boolean canMoveNorth(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
+        final TileObstacles northTileObstacles = tileMap.get(coordinate.moveNorth());
+        final TileObstacles originTileObstacles = tileMap.get(coordinate);
         return northTileObstacles != null && !originTileObstacles.northBlocked && !northTileObstacles.southBlocked;
     }
 
-    private boolean canMoveEast(Point point, Map<Point, TileObstacles> tileMap) {
-        final TileObstacles eastTileObstacles = tileMap.get(point.moveEast());
-        final TileObstacles originTileObstacles = tileMap.get(point);
+    private boolean canMoveEast(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
+        final TileObstacles eastTileObstacles = tileMap.get(coordinate.moveEast());
+        final TileObstacles originTileObstacles = tileMap.get(coordinate);
         return eastTileObstacles != null && !originTileObstacles.eastBlocked && !eastTileObstacles.westBlocked;
     }
 
-    private boolean canMoveSouth(Point point, Map<Point, TileObstacles> tileMap) {
-        final TileObstacles southTileObstacles = tileMap.get(point.moveSouth());
-        final TileObstacles originTileObstacles = tileMap.get(point);
+    private boolean canMoveSouth(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
+        final TileObstacles southTileObstacles = tileMap.get(coordinate.moveSouth());
+        final TileObstacles originTileObstacles = tileMap.get(coordinate);
         return southTileObstacles != null && !originTileObstacles.southBlocked && !southTileObstacles.northBlocked;
     }
 
-    private boolean canMoveWest(Point point, Map<Point, TileObstacles> tileMap) {
-        final TileObstacles westTileObstacles = tileMap.get(point.moveWest());
-        final TileObstacles originTileObstacles = tileMap.get(point);
+    private boolean canMoveWest(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
+        final TileObstacles westTileObstacles = tileMap.get(coordinate.moveWest());
+        final TileObstacles originTileObstacles = tileMap.get(coordinate);
         return westTileObstacles != null && !originTileObstacles.westBlocked && !westTileObstacles.eastBlocked;
     }
 
-    private boolean canMoveNorthEast(Point point, Map<Point, TileObstacles> tileMap) {
-        return this.canMoveEast(point, tileMap) &&
-                this.canMoveNorth(point.moveEast(), tileMap) &&
-                this.canMoveNorth(point, tileMap) &&
-                this.canMoveEast(point.moveNorth(), tileMap);
+    private boolean canMoveNorthEast(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
+        return this.canMoveEast(coordinate, tileMap) &&
+                this.canMoveNorth(coordinate.moveEast(), tileMap) &&
+                this.canMoveNorth(coordinate, tileMap) &&
+                this.canMoveEast(coordinate.moveNorth(), tileMap);
     }
 
-    private boolean canMoveSouthEast(Point point, Map<Point, TileObstacles> tileMap) {
-        return this.canMoveEast(point, tileMap) &&
-                this.canMoveSouth(point.moveEast(), tileMap) &&
-                this.canMoveSouth(point, tileMap) &&
-                this.canMoveEast(point.moveSouth(), tileMap);
+    private boolean canMoveSouthEast(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
+        return this.canMoveEast(coordinate, tileMap) &&
+                this.canMoveSouth(coordinate.moveEast(), tileMap) &&
+                this.canMoveSouth(coordinate, tileMap) &&
+                this.canMoveEast(coordinate.moveSouth(), tileMap);
     }
 
-    private boolean canMoveSouthWest(Point point, Map<Point, TileObstacles> tileMap) {
-        return this.canMoveWest(point, tileMap) &&
-                this.canMoveSouth(point.moveWest(), tileMap) &&
-                this.canMoveSouth(point, tileMap) &&
-                this.canMoveWest(point.moveSouth(), tileMap);
+    private boolean canMoveSouthWest(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
+        return this.canMoveWest(coordinate, tileMap) &&
+                this.canMoveSouth(coordinate.moveWest(), tileMap) &&
+                this.canMoveSouth(coordinate, tileMap) &&
+                this.canMoveWest(coordinate.moveSouth(), tileMap);
     }
 
-    private boolean canMoveNorthWest(Point point, Map<Point, TileObstacles> tileMap) {
-        return this.canMoveWest(point, tileMap) &&
-                this.canMoveNorth(point.moveWest(), tileMap) &&
-                this.canMoveNorth(point, tileMap) &&
-                this.canMoveWest(point.moveNorth(), tileMap);
+    private boolean canMoveNorthWest(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
+        return this.canMoveWest(coordinate, tileMap) &&
+                this.canMoveNorth(coordinate.moveWest(), tileMap) &&
+                this.canMoveNorth(coordinate, tileMap) &&
+                this.canMoveWest(coordinate.moveNorth(), tileMap);
     }
 
     /**
@@ -245,12 +245,12 @@ public class GraphBuilder {
      * @param movementJson The populated Object representing movement.json
      * @return A map where each coordinate has its own obstacle Data
      */
-    private Map<Point, TileObstacles> movementDataToMapOfTiles(MovementJson movementJson) {
-        HashMap<Point, TileObstacles> tiles = new HashMap<>();
+    private Map<Coordinate, TileObstacles> movementDataToMapOfTiles(MovementJson movementJson) {
+        HashMap<Coordinate, TileObstacles> tiles = new HashMap<>();
 
         // Parse walkable json tiles
-        for (PointJson tileJson : movementJson.walkable) {
-            final Point coordinate = new Point(tileJson.x, tileJson.y);
+        for (CoordinateJson tileJson : movementJson.walkable) {
+            final Coordinate coordinate = new Coordinate(tileJson.x, tileJson.y);
             final TileObstacles tile = new TileObstacles();
             tiles.put(coordinate, tile);
         }
@@ -259,8 +259,8 @@ public class GraphBuilder {
         // obstacleValues[i] tells if there are obstacles on the tile with the relevant coordinate at obstaclePositions[i]
         assert (movementJson.obstaclePositions.length == movementJson.obstacleValues.length);
         for (int i = 0; i < movementJson.obstaclePositions.length; i++) {
-            final PointJson obstacleCoordinateJson = movementJson.obstaclePositions[i];
-            final Point obstacleCoordinate = new Point(obstacleCoordinateJson.x, obstacleCoordinateJson.y);
+            final CoordinateJson obstacleCoordinateJson = movementJson.obstaclePositions[i];
+            final Coordinate obstacleCoordinate = new Coordinate(obstacleCoordinateJson.x, obstacleCoordinateJson.y);
             final TileObstacles tile = tiles.get(obstacleCoordinate);
 
             if (tile != null) {

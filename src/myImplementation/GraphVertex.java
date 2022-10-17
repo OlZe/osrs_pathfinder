@@ -5,9 +5,9 @@ import java.util.List;
 
 public class GraphVertex {
     public final List<GraphEdge> neighbors;
-    public final Point coordinate;
+    public final Coordinate coordinate;
 
-    public GraphVertex(Point coordinate) {
+    public GraphVertex(Coordinate coordinate) {
         this.coordinate = coordinate;
         this.neighbors = new LinkedList<>();
     }

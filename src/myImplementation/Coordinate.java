@@ -1,24 +1,24 @@
 package myImplementation;
 
-public record Point(int x, int y) {
+public record Coordinate(int x, int y) {
 
-    public Point move(int x, int y) {
-        return new Point(this.x + x, this.y + y);
+    public Coordinate move(int x, int y) {
+        return new Coordinate(this.x + x, this.y + y);
     }
 
-    public Point moveNorth() {
+    public Coordinate moveNorth() {
         return this.move(0, 1);
     }
 
-    public Point moveEast() {
+    public Coordinate moveEast() {
         return this.move(1, 0);
     }
 
-    public Point moveSouth() {
+    public Coordinate moveSouth() {
         return this.move(0, -1);
     }
 
-    public Point moveWest() {
+    public Coordinate moveWest() {
         return this.move(-1, 0);
     }
 
@@ -26,8 +26,8 @@ public record Point(int x, int y) {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Point point = (Point) o;
-        return x == point.x && y == point.y;
+        Coordinate coordinate = (Coordinate) o;
+        return x == coordinate.x && y == coordinate.y;
     }
 
     @Override

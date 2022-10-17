@@ -1,7 +1,7 @@
 package myImplementation.jsonClasses.movement;
 
 public class MovementJson {
-    public PointJson[] walkable;
-    public PointJson[] obstaclePositions;
+    public CoordinateJson[] walkable;
+    public CoordinateJson[] obstaclePositions;
     public byte[] obstacleValues;
 }

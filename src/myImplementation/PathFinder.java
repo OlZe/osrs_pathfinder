@@ -6,12 +6,12 @@ public class PathFinder {
 
     /**
      * Attempts to find a path using Breadth First Search algorithm.
-     * DISREGARDS teleports as it goes from start point to end point
+     * DISREGARDS teleports as it goes from start coordinate to end coordinate
      *
      * @param start The start vertex
      * @param end   The end coordinate
      */
-    public PathFinderResult findPathBfsOnlyStartPos(GraphVertex start, Point end) {
+    public PathFinderResult findPathBfsOnlyStartPos(GraphVertex start, Coordinate end) {
         final long startTime = System.currentTimeMillis();
 
         Queue<BacktrackableVertex> queue = new LinkedList<>();
@@ -49,13 +49,13 @@ public class PathFinder {
      * @param start The start vertex
      * @param end   The end coordinate
      */
-    public PathFinderResult findPathBfs(Graph graph, Point start, Point end) {
+    public PathFinderResult findPathBfs(Graph graph, Coordinate start, Coordinate end) {
         final long startTime = System.currentTimeMillis();
 
         Queue<BacktrackableVertex> queue = new LinkedList<>();
         Set<GraphVertex> expandedVertices = new HashSet<>();
 
-        // Add start point and starters to queue
+        // Add start coordinate and starters to queue
         queue.add(new BacktrackableVertex(graph.vertices().get(start), null, "start"));
         for(Graph.Starter starter : graph.starters()) {
             final GraphVertex starterVertex = graph.vertices().get(starter.coordinate());
@@ -90,13 +90,13 @@ public class PathFinder {
 
     /**
      * Attempts to find a path using Breadth First Search Algorithm.
-     * Starts at the end goal and keeps looking until it finds either the start point or a starter teleport
+     * Starts at the end goal and keeps looking until it finds either the start coordinate or a starter teleport
      * WARNING: Doesn't make sense because there's unidirectional transports
      * @param graph The Graph
      * @param start The starting position of the character
      * @param end The destination position
      */
-    public PathFinderResult findPathBfsEndToStarters(Graph graph, Point start, Point end) {
+    public PathFinderResult findPathBfsEndToStarters(Graph graph, Coordinate start, Coordinate end) {
         final long startTime = System.currentTimeMillis();
 
 
@@ -116,8 +116,8 @@ public class PathFinder {
                 expandedVertices.add(currentVertex);
 
                 // Goal found?
-                final boolean startPointReached = currentVertex.coordinate.equals(start);
-                if (startPointReached) {
+                final boolean startCoordinateReached = currentVertex.coordinate.equals(start);
+                if (startCoordinateReached) {
                     final BacktrackableVertex s = new BacktrackableVertex(currentVertex, currentBacktrackableVertex, "start");
                     return new PathFinderResult(true, this.backtrack(s), System.currentTimeMillis() - startTime);
                 }

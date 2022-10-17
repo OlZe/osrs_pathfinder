@@ -1,7 +1,7 @@
 package myImplementation.jsonClasses.movement;
 
 public class TransportJson {
-    public PointJson start;
-    public PointJson end;
+    public CoordinateJson start;
+    public CoordinateJson end;
     public String title;
 }
