@@ -8,33 +8,33 @@ public class PathFinder {
      * Attempts to find a path using Breadth First Search algorithm.
      * DISREGARDS teleports as it goes from start point to end point
      *
-     * @param start The start node
+     * @param start The start vertex
      * @param end   The end coordinate
      */
-    public PathFinderResult findPathBfsOnlyStartPos(GraphNode start, Point end) {
+    public PathFinderResult findPathBfsOnlyStartPos(GraphVertex start, Point end) {
         final long startTime = System.currentTimeMillis();
 
-        Queue<NodeWithBacktrack> queue = new LinkedList<>();
-        Set<GraphNode> expandedNodes = new HashSet<>();
+        Queue<BacktrackableVertex> queue = new LinkedList<>();
+        Set<GraphVertex> expandedVertices = new HashSet<>();
 
-        queue.add(new NodeWithBacktrack(start, null, "start"));
+        queue.add(new BacktrackableVertex(start, null, "start"));
 
         while (queue.peek() != null) {
 
-            // Expand next node if new
-            final NodeWithBacktrack currentNodeWithBacktrack = queue.remove();
-            final GraphNode currentNode = currentNodeWithBacktrack.node;
-            if (!expandedNodes.contains(currentNode)) {
-                expandedNodes.add(currentNode);
+            // Expand next vertex if new
+            final BacktrackableVertex currentBacktrackableVertex = queue.remove();
+            final GraphVertex currentVertex = currentBacktrackableVertex.vertex;
+            if (!expandedVertices.contains(currentVertex)) {
+                expandedVertices.add(currentVertex);
 
                 // Goal found?
-                if (currentNode.coordinate.equals(end)) {
-                    return new PathFinderResult(true, this.backtrack(currentNodeWithBacktrack), System.currentTimeMillis() - startTime);
+                if (currentVertex.coordinate.equals(end)) {
+                    return new PathFinderResult(true, this.backtrack(currentBacktrackableVertex), System.currentTimeMillis() - startTime);
                 }
 
-                // Add neighbours of node into queue
-                for (GraphNodeNeighbour neighbor : currentNode.neighbors) {
-                    queue.add(new NodeWithBacktrack(neighbor.node(), currentNodeWithBacktrack, neighbor.methodOfMovement()));
+                // Add neighbours of vertex into queue
+                for (GraphEdge neighbor : currentVertex.neighbors) {
+                    queue.add(new BacktrackableVertex(neighbor.to(), currentBacktrackableVertex, neighbor.methodOfMovement()));
                 }
             }
         }
@@ -46,39 +46,39 @@ public class PathFinder {
      * Attempts to find a path using Breadth First Search algorithm.
      * Uses start position and starters
      *
-     * @param start The start node
+     * @param start The start vertex
      * @param end   The end coordinate
      */
     public PathFinderResult findPathBfs(Graph graph, Point start, Point end) {
         final long startTime = System.currentTimeMillis();
 
-        Queue<NodeWithBacktrack> queue = new LinkedList<>();
-        Set<GraphNode> expandedNodes = new HashSet<>();
+        Queue<BacktrackableVertex> queue = new LinkedList<>();
+        Set<GraphVertex> expandedVertices = new HashSet<>();
 
         // Add start point and starters to queue
-        queue.add(new NodeWithBacktrack(graph.nodes().get(start), null, "start"));
+        queue.add(new BacktrackableVertex(graph.vertices().get(start), null, "start"));
         for(Graph.Starter starter : graph.starters()) {
-            final GraphNode starterNode = graph.nodes().get(starter.coordinate());
-            assert(starterNode != null);
-            queue.add(new NodeWithBacktrack(starterNode, null, starter.title()));
+            final GraphVertex starterVertex = graph.vertices().get(starter.coordinate());
+            assert(starterVertex != null);
+            queue.add(new BacktrackableVertex(starterVertex, null, starter.title()));
         }
 
         while (queue.peek() != null) {
 
-            // Expand next node if new
-            final NodeWithBacktrack currentNodeWithBacktrack = queue.remove();
-            final GraphNode currentNode = currentNodeWithBacktrack.node;
-            if (!expandedNodes.contains(currentNode)) {
-                expandedNodes.add(currentNode);
+            // Expand next vertex if new
+            final BacktrackableVertex currentBacktrackableVertex = queue.remove();
+            final GraphVertex currentVertex = currentBacktrackableVertex.vertex;
+            if (!expandedVertices.contains(currentVertex)) {
+                expandedVertices.add(currentVertex);
 
                 // Goal found?
-                if (currentNode.coordinate.equals(end)) {
-                    return new PathFinderResult(true, this.backtrack(currentNodeWithBacktrack), System.currentTimeMillis() - startTime);
+                if (currentVertex.coordinate.equals(end)) {
+                    return new PathFinderResult(true, this.backtrack(currentBacktrackableVertex), System.currentTimeMillis() - startTime);
                 }
 
-                // Add neighbours of node into queue
-                for (GraphNodeNeighbour neighbor : currentNode.neighbors) {
-                    queue.add(new NodeWithBacktrack(neighbor.node(), currentNodeWithBacktrack, neighbor.methodOfMovement()));
+                // Add neighbours of vertex into queue
+                for (GraphEdge neighbor : currentVertex.neighbors) {
+                    queue.add(new BacktrackableVertex(neighbor.to(), currentBacktrackableVertex, neighbor.methodOfMovement()));
                 }
             }
         }
@@ -100,36 +100,36 @@ public class PathFinder {
         final long startTime = System.currentTimeMillis();
 
 
-        Queue<NodeWithBacktrack> queue = new LinkedList<>();
-        Set<GraphNode> expandedNodes = new HashSet<>();
+        Queue<BacktrackableVertex> queue = new LinkedList<>();
+        Set<GraphVertex> expandedVertices = new HashSet<>();
 
-        final GraphNode endNode = graph.nodes().get(end);
-        assert(endNode != null);
+        final GraphVertex endVertex = graph.vertices().get(end);
+        assert(endVertex != null);
 
-        queue.add(new NodeWithBacktrack(endNode, null, "end"));
+        queue.add(new BacktrackableVertex(endVertex, null, "end"));
         while(queue.peek() != null) {
 
-            // Expand next node if new
-            final NodeWithBacktrack currentNodeWithBacktrack = queue.remove();
-            final GraphNode currentNode = currentNodeWithBacktrack.node;
-            if (!expandedNodes.contains(currentNode)) {
-                expandedNodes.add(currentNode);
+            // Expand next vertex if new
+            final BacktrackableVertex currentBacktrackableVertex = queue.remove();
+            final GraphVertex currentVertex = currentBacktrackableVertex.vertex;
+            if (!expandedVertices.contains(currentVertex)) {
+                expandedVertices.add(currentVertex);
 
                 // Goal found?
-                final boolean startPointReached = currentNode.coordinate.equals(start);
+                final boolean startPointReached = currentVertex.coordinate.equals(start);
                 if (startPointReached) {
-                    final NodeWithBacktrack s = new NodeWithBacktrack(currentNode, currentNodeWithBacktrack, "start");
+                    final BacktrackableVertex s = new BacktrackableVertex(currentVertex, currentBacktrackableVertex, "start");
                     return new PathFinderResult(true, this.backtrack(s), System.currentTimeMillis() - startTime);
                 }
-                final Optional<Graph.Starter> reachedStarter = graph.starters().stream().filter(s -> s.coordinate().equals(currentNode.coordinate)).findAny();
+                final Optional<Graph.Starter> reachedStarter = graph.starters().stream().filter(s -> s.coordinate().equals(currentVertex.coordinate)).findAny();
                 if(reachedStarter.isPresent()) {
-                    final NodeWithBacktrack s = new NodeWithBacktrack(currentNode, currentNodeWithBacktrack, reachedStarter.get().title());
+                    final BacktrackableVertex s = new BacktrackableVertex(currentVertex, currentBacktrackableVertex, reachedStarter.get().title());
                     return new PathFinderResult(true, this.backtrack(s), System.currentTimeMillis() - startTime);
                 }
 
-                // Add neighbours of node into queue
-                for (GraphNodeNeighbour neighbor : currentNode.neighbors) {
-                    queue.add(new NodeWithBacktrack(neighbor.node(), currentNodeWithBacktrack, neighbor.methodOfMovement()));
+                // Add neighbours of vertex into queue
+                for (GraphEdge neighbor : currentVertex.neighbors) {
+                    queue.add(new BacktrackableVertex(neighbor.to(), currentBacktrackableVertex, neighbor.methodOfMovement()));
                 }
             }
         }
@@ -143,30 +143,30 @@ public class PathFinder {
 
 
     /**
-     * Backtracks from a found goal node to the start
+     * Backtracks from a found goal vertex to the start
      *
-     * @param goal The found goal node with backtracking references
+     * @param goal The found goal vertex with backtracking references
      * @return the PathFinder Result
      */
-    private List<PathFinderResult.Movement> backtrack(NodeWithBacktrack goal) {
+    private List<PathFinderResult.Movement> backtrack(BacktrackableVertex goal) {
         List<PathFinderResult.Movement> path = new LinkedList<>();
 
-        NodeWithBacktrack current = goal;
+        BacktrackableVertex current = goal;
         while (current.hasPrevious()) {
-            path.add(0, new PathFinderResult.Movement(current.node.coordinate, current.methodOfMovement));
+            path.add(0, new PathFinderResult.Movement(current.vertex.coordinate, current.methodOfMovement));
             current = current.previous;
         }
 
         // Reached the start
-        path.add(0, new PathFinderResult.Movement(current.node.coordinate, current.methodOfMovement));
+        path.add(0, new PathFinderResult.Movement(current.vertex.coordinate, current.methodOfMovement));
 
         return path;
     }
 
     /**
-     * Used internally when pathfinding to backtrack from goal node back to start
+     * Used internally when pathfinding to backtrack from goal vertex back to start
      */
-    private record NodeWithBacktrack(GraphNode node, NodeWithBacktrack previous, String methodOfMovement) {
+    private record BacktrackableVertex(GraphVertex vertex, BacktrackableVertex previous, String methodOfMovement) {
         public boolean hasPrevious() {
             return this.previous != null;
         }

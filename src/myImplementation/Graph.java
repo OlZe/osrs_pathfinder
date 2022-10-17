@@ -3,7 +3,7 @@ package myImplementation;
 import java.util.Map;
 import java.util.Set;
 
-public record Graph(Map<Point, GraphNode> nodes, Set<Starter> starters) {
+public record Graph(Map<Point, GraphVertex> vertices, Set<Starter> starters) {
 
     /**
      * Represents a teleport that can be used anywhere in the game.

@@ -34,9 +34,9 @@ public class GraphBuilder {
         System.out.println((endTimeTileMap - startTimeTileMap) + "ms");
 
         // Build walkable graph
-        System.out.print("Graph Builder: building walkable nodes: ");
+        System.out.print("Graph Builder: building walkable vertices: ");
         final long startTimeBuildGraph = System.currentTimeMillis();
-        final Map<Point, GraphNode> graphNodes = this.mapOfTilesToWalkableGraph(tiles);
+        final Map<Point, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
         final long endTimeBuildGraph = System.currentTimeMillis();
         System.out.println((endTimeBuildGraph - startTimeBuildGraph) + "ms");
 
@@ -50,7 +50,7 @@ public class GraphBuilder {
         // Add Transports to Graph
         System.out.print("Graph Builder: adding transports: ");
         final long startTimeAddTransports = System.currentTimeMillis();
-        this.addTransports(graphNodes, transportsJson);
+        this.addTransports(graphVertices, transportsJson);
         final long endTimeAddTransports = System.currentTimeMillis();
         System.out.println((endTimeAddTransports - startTimeAddTransports) + "ms");
 
@@ -61,7 +61,7 @@ public class GraphBuilder {
         final long endTimeFindStarters = System.currentTimeMillis();
         System.out.println((endTimeFindStarters - startTimeFindStarters) + "ms");
 
-        final Graph graph = new Graph(graphNodes, starters);
+        final Graph graph = new Graph(graphVertices, starters);
         System.out.println("Graph Builder: total: " + (System.currentTimeMillis() - startTimeDeserializeMovement) + "ms");
         return graph;
     }
@@ -89,12 +89,12 @@ public class GraphBuilder {
     }
 
     /**
-     * links nodes according to point-to-point transports (fairy rings etc.).
+     * links vertices according to point-to-point transports (fairy rings etc.).
      * Does NOT include teleports!
-     * @param graph The nodes of which just walkable ones have been linked
+     * @param graph The vertices of which just walkable ones have been linked
      * @param transports The deserialized transport data
      */
-    private void addTransports(Map<Point, GraphNode> graph, TransportJson[] transports) {
+    private void addTransports(Map<Point, GraphVertex> graph, TransportJson[] transports) {
         for(TransportJson transport : transports) {
             if(transport.start == null) {
                 // This transport is a teleport, skip it
@@ -106,10 +106,10 @@ public class GraphBuilder {
                 continue;
             }
 
-            final GraphNode start = graph.get(new Point(transport.start.x, transport.start.y));
-            final GraphNode end = graph.get(new Point(transport.end.x, transport.end.y));
+            final GraphVertex start = graph.get(new Point(transport.start.x, transport.start.y));
+            final GraphVertex end = graph.get(new Point(transport.end.x, transport.end.y));
             if(start != null && end != null) {
-                start.linkTo(end, transport.title);
+                start.addEdgeTo(end, transport.title);
             }
         }
     }
@@ -118,70 +118,70 @@ public class GraphBuilder {
      * @param tileMap A Map of Tiles
      * @return A Graph linking all walkable tiles together
      */
-    private Map<Point, GraphNode> mapOfTilesToWalkableGraph(Map<Point, TileObstacles> tileMap) {
-        Map<Point, GraphNode> graph = new HashMap<>();
+    private Map<Point, GraphVertex> mapOfTilesToWalkableGraph(Map<Point, TileObstacles> tileMap) {
+        Map<Point, GraphVertex> graph = new HashMap<>();
 
         for (Map.Entry<Point, TileObstacles> tile : tileMap.entrySet()) {
             final Point point = tile.getKey();
 
-            final GraphNode node = new GraphNode(point);
-            graph.put(point, node);
+            final GraphVertex vertex = new GraphVertex(point);
+            graph.put(point, vertex);
 
-            // Check if there are neighbouring nodes, if so link them if traversable
+            // Check if there are neighbouring vertices, if so link them if traversable
             // North
-            final GraphNode northNode = graph.get(point.moveNorth());
-            if (northNode != null && this.canMoveNorth(point, tileMap)) {
-                node.linkTo(northNode, "walk north");
-                northNode.linkTo(node, "walk south");
+            final GraphVertex northVertex = graph.get(point.moveNorth());
+            if (northVertex != null && this.canMoveNorth(point, tileMap)) {
+                vertex.addEdgeTo(northVertex, "walk north");
+                northVertex.addEdgeTo(vertex, "walk south");
             }
 
             // East
-            final GraphNode eastNode = graph.get(point.moveEast());
-            if (eastNode != null && this.canMoveEast(point, tileMap)) {
-                node.linkTo(eastNode, "walk east");
-                eastNode.linkTo(node, "walk west");
+            final GraphVertex eastVertex = graph.get(point.moveEast());
+            if (eastVertex != null && this.canMoveEast(point, tileMap)) {
+                vertex.addEdgeTo(eastVertex, "walk east");
+                eastVertex.addEdgeTo(vertex, "walk west");
             }
 
             // South
-            final GraphNode southNode = graph.get(point.moveSouth());
-            if (southNode != null && this.canMoveSouth(point, tileMap)) {
-                node.linkTo(southNode, "walk south");
-                southNode.linkTo(node, "walk north");
+            final GraphVertex southVertex = graph.get(point.moveSouth());
+            if (southVertex != null && this.canMoveSouth(point, tileMap)) {
+                vertex.addEdgeTo(southVertex, "walk south");
+                southVertex.addEdgeTo(vertex, "walk north");
             }
 
             // West
-            final GraphNode westNode = graph.get(point.moveWest());
-            if (westNode != null && this.canMoveWest(point, tileMap)) {
-                node.linkTo(westNode, "walk west");
-                westNode.linkTo(node, "walk east");
+            final GraphVertex westVertex = graph.get(point.moveWest());
+            if (westVertex != null && this.canMoveWest(point, tileMap)) {
+                vertex.addEdgeTo(westVertex, "walk west");
+                westVertex.addEdgeTo(vertex, "walk east");
             }
 
             // North East
-            final GraphNode northEastNode = graph.get(point.moveNorth().moveEast());
-            if (northEastNode != null && this.canMoveNorthEast(point, tileMap)) {
-                node.linkTo(northEastNode, "walk north east");
-                northEastNode.linkTo(node, "walk south west");
+            final GraphVertex northEastVertex = graph.get(point.moveNorth().moveEast());
+            if (northEastVertex != null && this.canMoveNorthEast(point, tileMap)) {
+                vertex.addEdgeTo(northEastVertex, "walk north east");
+                northEastVertex.addEdgeTo(vertex, "walk south west");
             }
 
             // South East
-            final GraphNode southEastNode = graph.get(point.moveSouth().moveEast());
-            if (southEastNode != null && this.canMoveSouthEast(point, tileMap)) {
-                node.linkTo(southEastNode, "walk south east");
-                southEastNode.linkTo(node, "walk north west");
+            final GraphVertex southEastVertex = graph.get(point.moveSouth().moveEast());
+            if (southEastVertex != null && this.canMoveSouthEast(point, tileMap)) {
+                vertex.addEdgeTo(southEastVertex, "walk south east");
+                southEastVertex.addEdgeTo(vertex, "walk north west");
             }
 
             // South West
-            final GraphNode southWestNode = graph.get(point.moveSouth().moveWest());
-            if (southWestNode != null && this.canMoveSouthWest(point, tileMap)) {
-                node.linkTo(southWestNode, "walk south west");
-                southWestNode.linkTo(node, "walk north east");
+            final GraphVertex southWestVertex = graph.get(point.moveSouth().moveWest());
+            if (southWestVertex != null && this.canMoveSouthWest(point, tileMap)) {
+                vertex.addEdgeTo(southWestVertex, "walk south west");
+                southWestVertex.addEdgeTo(vertex, "walk north east");
             }
 
             // North West
-            final GraphNode northWestNode = graph.get(point.moveNorth().moveWest());
-            if (northWestNode != null && this.canMoveNorthWest(point, tileMap)) {
-                node.linkTo(northWestNode, "walk north west");
-                northWestNode.linkTo(node, "walk south east");
+            final GraphVertex northWestVertex = graph.get(point.moveNorth().moveWest());
+            if (northWestVertex != null && this.canMoveNorthWest(point, tileMap)) {
+                vertex.addEdgeTo(northWestVertex, "walk north west");
+                northWestVertex.addEdgeTo(vertex, "walk south east");
             }
         }
 
