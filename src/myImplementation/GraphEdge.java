@@ -1,5 +1,5 @@
 package myImplementation;
 
-public record GraphEdge(GraphVertex to, String methodOfMovement) {
+public record GraphEdge(GraphVertex to, byte cost, String methodOfMovement) {
 
 }

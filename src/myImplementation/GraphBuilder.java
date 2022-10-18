@@ -1,7 +1,7 @@
 package myImplementation;
 
-import myImplementation.jsonClasses.movement.MovementJson;
 import myImplementation.jsonClasses.movement.CoordinateJson;
+import myImplementation.jsonClasses.movement.MovementJson;
 import myImplementation.jsonClasses.movement.TransportJson;
 
 import java.io.IOException;
@@ -68,22 +68,23 @@ public class GraphBuilder {
 
     /**
      * Finds teleports in transport data
+     *
      * @param transportsJson The deserialized transport data
      * @return All teleports
      */
     private Set<Teleport> findTeleports(TransportJson[] transportsJson) {
         Set<Teleport> teleports = new HashSet<>();
-        for(TransportJson transport : transportsJson) {
-            if(transport.start != null) {
+        for (TransportJson transport : transportsJson) {
+            if (transport.start != null) {
                 // This is a point-to-point transport, not a teleport
                 continue;
             }
-            if(transport.end.z != 0) {
+            if (transport.end.z != 0) {
                 // This teleport is out of bounds, skip it
                 continue;
             }
             final Coordinate teleportCoordinate = new Coordinate(transport.end.x, transport.end.y);
-            teleports.add(new Teleport(teleportCoordinate, transport.title));
+            teleports.add(new Teleport(teleportCoordinate, transport.title, transport.duration));
         }
         return teleports;
     }
@@ -91,25 +92,26 @@ public class GraphBuilder {
     /**
      * links vertices according to point-to-point transports (fairy rings etc.).
      * Does NOT include teleports!
-     * @param graph The vertices of which just walkable ones have been linked
+     *
+     * @param graph      The vertices of which just walkable ones have been linked
      * @param transports The deserialized transport data
      */
     private void addTransports(Map<Coordinate, GraphVertex> graph, TransportJson[] transports) {
-        for(TransportJson transport : transports) {
-            if(transport.start == null) {
+        for (TransportJson transport : transports) {
+            if (transport.start == null) {
                 // This transport is a teleport, skip it
                 continue;
             }
 
-            if(transport.start.z != 0 || transport.end.z != 0) {
+            if (transport.start.z != 0 || transport.end.z != 0) {
                 // This transport is out of bounds, skip it
                 continue;
             }
 
             final GraphVertex start = graph.get(new Coordinate(transport.start.x, transport.start.y));
             final GraphVertex end = graph.get(new Coordinate(transport.end.x, transport.end.y));
-            if(start != null && end != null) {
-                start.addEdgeTo(end, transport.title);
+            if (start != null && end != null) {
+                start.addEdgeTo(end, transport.duration, transport.title);
             }
         }
     }
@@ -131,57 +133,57 @@ public class GraphBuilder {
             // North
             final GraphVertex northVertex = graph.get(coordinate.moveNorth());
             if (northVertex != null && this.canMoveNorth(coordinate, tileMap)) {
-                vertex.addEdgeTo(northVertex, "walk north");
-                northVertex.addEdgeTo(vertex, "walk south");
+                vertex.addEdgeTo(northVertex, (byte) 1, "walk north");
+                northVertex.addEdgeTo(vertex, (byte) 1, "walk south");
             }
 
             // East
             final GraphVertex eastVertex = graph.get(coordinate.moveEast());
             if (eastVertex != null && this.canMoveEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(eastVertex, "walk east");
-                eastVertex.addEdgeTo(vertex, "walk west");
+                vertex.addEdgeTo(eastVertex, (byte) 1, "walk east");
+                eastVertex.addEdgeTo(vertex, (byte) 1, "walk west");
             }
 
             // South
             final GraphVertex southVertex = graph.get(coordinate.moveSouth());
             if (southVertex != null && this.canMoveSouth(coordinate, tileMap)) {
-                vertex.addEdgeTo(southVertex, "walk south");
-                southVertex.addEdgeTo(vertex, "walk north");
+                vertex.addEdgeTo(southVertex, (byte) 1, "walk south");
+                southVertex.addEdgeTo(vertex, (byte) 1, "walk north");
             }
 
             // West
             final GraphVertex westVertex = graph.get(coordinate.moveWest());
             if (westVertex != null && this.canMoveWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(westVertex, "walk west");
-                westVertex.addEdgeTo(vertex, "walk east");
+                vertex.addEdgeTo(westVertex, (byte) 1, "walk west");
+                westVertex.addEdgeTo(vertex, (byte) 1, "walk east");
             }
 
             // North East
             final GraphVertex northEastVertex = graph.get(coordinate.moveNorth().moveEast());
             if (northEastVertex != null && this.canMoveNorthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(northEastVertex, "walk north east");
-                northEastVertex.addEdgeTo(vertex, "walk south west");
+                vertex.addEdgeTo(northEastVertex, (byte) 1, "walk north east");
+                northEastVertex.addEdgeTo(vertex, (byte) 1, "walk south west");
             }
 
             // South East
             final GraphVertex southEastVertex = graph.get(coordinate.moveSouth().moveEast());
             if (southEastVertex != null && this.canMoveSouthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(southEastVertex, "walk south east");
-                southEastVertex.addEdgeTo(vertex, "walk north west");
+                vertex.addEdgeTo(southEastVertex, (byte) 1, "walk south east");
+                southEastVertex.addEdgeTo(vertex, (byte) 1, "walk north west");
             }
 
             // South West
             final GraphVertex southWestVertex = graph.get(coordinate.moveSouth().moveWest());
             if (southWestVertex != null && this.canMoveSouthWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(southWestVertex, "walk south west");
-                southWestVertex.addEdgeTo(vertex, "walk north east");
+                vertex.addEdgeTo(southWestVertex, (byte) 1, "walk south west");
+                southWestVertex.addEdgeTo(vertex, (byte) 1, "walk north east");
             }
 
             // North West
             final GraphVertex northWestVertex = graph.get(coordinate.moveNorth().moveWest());
             if (northWestVertex != null && this.canMoveNorthWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(northWestVertex, "walk north west");
-                northWestVertex.addEdgeTo(vertex, "walk south east");
+                vertex.addEdgeTo(northWestVertex, (byte) 1, "walk north west");
+                northWestVertex.addEdgeTo(vertex, (byte) 1, "walk south east");
             }
         }
 
@@ -242,6 +244,7 @@ public class GraphBuilder {
 
     /**
      * Processes the rather stupidly made json format into a single data structure containing all Tile coordinates and Obstacles
+     *
      * @param movementJson The populated Object representing movement.json
      * @return A map where each coordinate has its own obstacle Data
      */

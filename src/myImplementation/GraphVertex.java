@@ -16,8 +16,8 @@ public class GraphVertex {
      * Adds a unidirectional edge from this Vertex to the newNeighbour
      * @param newNeighbour The new neighbour
      */
-    public void addEdgeTo(GraphVertex newNeighbour, String methodOfMovement) {
-        this.neighbors.add(new GraphEdge(newNeighbour, methodOfMovement));
+    public void addEdgeTo(GraphVertex newNeighbour, byte cost, String methodOfMovement) {
+        this.neighbors.add(new GraphEdge(newNeighbour, cost, methodOfMovement));
     }
 
     /**

@@ -4,6 +4,48 @@ import java.util.*;
 
 public class PathFinder {
 
+
+    public PathFinderResult findPathDijkstra(Graph graph, Coordinate start, Coordinate end) {
+        final long startTime = System.currentTimeMillis();
+
+        final Queue<PriorityQueueEntry> queue = new PriorityQueue<>();
+        final Set<GraphVertex> expandedVertices = new HashSet<>();
+
+        // Add starting points to queue
+        final GraphVertex startVertex = graph.vertices().get(start);
+        assert (startVertex != null);
+        queue.add(new PriorityQueueEntry(new BacktrackableVertex(startVertex, null, "start"), 0));
+        for (Teleport teleport : graph.teleports()) {
+            final GraphVertex tpVertex = graph.vertices().get(teleport.destination());
+            assert (tpVertex != null);
+            queue.add(new PriorityQueueEntry(new BacktrackableVertex(tpVertex, null, teleport.title()), teleport.duration()));
+        }
+
+        while (queue.peek() != null) {
+
+            // Expand next vertex if new
+            final PriorityQueueEntry current = queue.remove();
+            final GraphVertex currentVertex = current.backtrackableVertex.vertex;
+            if (!expandedVertices.contains(currentVertex)) {
+                expandedVertices.add(currentVertex);
+
+                // Goal found?
+                if (currentVertex.coordinate.equals(end)) {
+                    return new PathFinderResult(true, this.backtrack(current.backtrackableVertex), System.currentTimeMillis() - startTime);
+                }
+
+                // Add neighbours of vertex into queue
+                for (GraphEdge neighbor : currentVertex.neighbors) {
+                    final int newCostToNeighbour = current.cost + neighbor.cost();
+                    final BacktrackableVertex backtrackableVertexNeighbour = new BacktrackableVertex(neighbor.to(), current.backtrackableVertex, neighbor.methodOfMovement());
+                    queue.add(new PriorityQueueEntry(backtrackableVertexNeighbour, newCostToNeighbour));
+                }
+            }
+        }
+
+        return new PathFinderResult(false, null, System.currentTimeMillis() - startTime);
+    }
+
     /**
      * Attempts to find a path using Breadth First Search algorithm.
      * DISREGARDS teleports as it goes from start coordinate to end coordinate
@@ -57,9 +99,9 @@ public class PathFinder {
 
         // Add start coordinate and teleports to queue
         queue.add(new BacktrackableVertex(graph.vertices().get(start), null, "start"));
-        for(Teleport teleport : graph.teleports()) {
+        for (Teleport teleport : graph.teleports()) {
             final GraphVertex teleportVertex = graph.vertices().get(teleport.destination());
-            assert(teleportVertex != null);
+            assert (teleportVertex != null);
             queue.add(new BacktrackableVertex(teleportVertex, null, teleport.title()));
         }
 
@@ -87,14 +129,14 @@ public class PathFinder {
     }
 
 
-
     /**
      * Attempts to find a path using Breadth First Search Algorithm.
      * Starts at the end goal and keeps looking until it finds either the start coordinate or a teleport
      * WARNING: Doesn't make sense because there's unidirectional transports
+     *
      * @param graph The Graph
      * @param start The starting position of the character
-     * @param end The destination position
+     * @param end   The destination position
      */
     public PathFinderResult findPathBfsEndToStarters(Graph graph, Coordinate start, Coordinate end) {
         final long startTime = System.currentTimeMillis();
@@ -104,10 +146,10 @@ public class PathFinder {
         Set<GraphVertex> expandedVertices = new HashSet<>();
 
         final GraphVertex endVertex = graph.vertices().get(end);
-        assert(endVertex != null);
+        assert (endVertex != null);
 
         queue.add(new BacktrackableVertex(endVertex, null, "end"));
-        while(queue.peek() != null) {
+        while (queue.peek() != null) {
 
             // Expand next vertex if new
             final BacktrackableVertex currentBacktrackableVertex = queue.remove();
@@ -122,7 +164,7 @@ public class PathFinder {
                     return new PathFinderResult(true, this.backtrack(s), System.currentTimeMillis() - startTime);
                 }
                 final Optional<Teleport> reachedStarter = graph.teleports().stream().filter(s -> s.destination().equals(currentVertex.coordinate)).findAny();
-                if(reachedStarter.isPresent()) {
+                if (reachedStarter.isPresent()) {
                     final BacktrackableVertex s = new BacktrackableVertex(currentVertex, currentBacktrackableVertex, reachedStarter.get().title());
                     return new PathFinderResult(true, this.backtrack(s), System.currentTimeMillis() - startTime);
                 }
@@ -137,9 +179,6 @@ public class PathFinder {
 
         return new PathFinderResult(false, null, System.currentTimeMillis() - startTime);
     }
-
-
-
 
 
     /**
@@ -169,6 +208,19 @@ public class PathFinder {
     private record BacktrackableVertex(GraphVertex vertex, BacktrackableVertex previous, String methodOfMovement) {
         public boolean hasPrevious() {
             return this.previous != null;
+        }
+    }
+
+    /**
+     * Used internally when pathfinding to keep track of costs and to backtrack form goal vertex back to start
+     * Implements Comparable to allow natural ordering by cost
+     */
+    private record PriorityQueueEntry(BacktrackableVertex backtrackableVertex,
+                                      int cost) implements Comparable<PriorityQueueEntry> {
+
+        @Override
+        public int compareTo(PriorityQueueEntry o) {
+            return this.cost - o.cost;
         }
     }
 }

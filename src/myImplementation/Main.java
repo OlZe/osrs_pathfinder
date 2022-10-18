@@ -20,7 +20,7 @@ public class Main {
         while(true) {
             Coordinate start = new Coordinate(3228, 3219);
             Coordinate end = new Coordinate(3228, 3219);
-            PathFinderResult result = pathFinder.findPathBfs(graph, start, end);
+            PathFinderResult result = pathFinder.findPathDijkstra(graph, start, end);
 
             System.out.println("Need a command here so I can debug and see the result variable");
         }
