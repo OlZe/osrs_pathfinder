@@ -19,50 +19,35 @@ public class GraphBuilder {
      * @throws IOException can't read file
      */
     public Graph buildGraph() throws IOException {
+        TimeLogger log = new TimeLogger();
+        log.start("Graph Builder");
+
         // Deserialize Json
-        System.out.print("Graph Builder: deserializing movement data: ");
-        final long startTimeDeserializeMovement = System.currentTimeMillis();
         final MovementJson movementJson = new DataDeserializer().deserializeMovementData();
-        final long endTimeDeserializeMovement = System.currentTimeMillis();
-        System.out.println((endTimeDeserializeMovement - startTimeDeserializeMovement) + "ms");
+        log.lap("deserialize movement data");
 
         // Build Tile Map
-        System.out.print("Graph Builder: building tile map: ");
-        final long startTimeTileMap = System.currentTimeMillis();
         final Map<Coordinate, GraphBuilder.TileObstacles> tiles = this.movementDataToMapOfTiles(movementJson);
-        final long endTimeTileMap = System.currentTimeMillis();
-        System.out.println((endTimeTileMap - startTimeTileMap) + "ms");
+        log.lap("building tile map");
 
         // Build walkable graph
-        System.out.print("Graph Builder: building walkable vertices: ");
-        final long startTimeBuildGraph = System.currentTimeMillis();
         final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
-        final long endTimeBuildGraph = System.currentTimeMillis();
-        System.out.println((endTimeBuildGraph - startTimeBuildGraph) + "ms");
+        log.lap("link walkable vertices");
 
         // Deserialize Transport Data
-        System.out.print("Graph Builder: deserializing transports data: ");
-        final long startTimeDeserializeTransports = System.currentTimeMillis();
         final TransportJson[] transportsJson = new DataDeserializer().deserializeTransportData();
-        final long endTimeDeserializeTransports = System.currentTimeMillis();
-        System.out.println((endTimeDeserializeTransports - startTimeDeserializeTransports) + "ms");
+        log.lap("deserialize transport data");
 
         // Add Transports to Graph
-        System.out.print("Graph Builder: adding transports: ");
-        final long startTimeAddTransports = System.currentTimeMillis();
         this.addTransports(graphVertices, transportsJson);
-        final long endTimeAddTransports = System.currentTimeMillis();
-        System.out.println((endTimeAddTransports - startTimeAddTransports) + "ms");
+        log.lap("link vertices by transports");
 
         // find teleports
-        System.out.print("Graph Builder: finding teleports: ");
-        final long startTimeFindTeleports = System.currentTimeMillis();
-        Set<Teleport> teleports = this.findTeleports(transportsJson);
-        final long endTimeFindTeleports = System.currentTimeMillis();
-        System.out.println((endTimeFindTeleports - startTimeFindTeleports) + "ms");
+        final Set<Teleport> teleports = this.findTeleports(transportsJson);
+        log.lap("find teleports");
 
         final Graph graph = new Graph(graphVertices, teleports);
-        System.out.println("Graph Builder: total: " + (System.currentTimeMillis() - startTimeDeserializeMovement) + "ms");
+        log.end();
         return graph;
     }
 
