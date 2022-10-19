@@ -28,7 +28,7 @@ public class GraphBuilder {
 
         // Build Tile Map
         final Map<Coordinate, GraphBuilder.TileObstacles> tiles = this.movementDataToMapOfTiles(movementJson);
-        log.lap("building tile map");
+        log.lap("build tile map");
 
         // Build walkable graph
         final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
@@ -46,9 +46,16 @@ public class GraphBuilder {
         final Set<Teleport> teleports = this.findTeleports(transportsJson);
         log.lap("find teleports");
 
-        final Graph graph = new Graph(graphVertices, teleports);
+        // Deserialize Skretzo Data
+        final TransportJson[] skretzoTransports = new DataDeserializer().deserializeSkretzoData();
+        log.lap("deserialize skretzo data");
+
+        // Add skretzo transports
+        this.addTransports(graphVertices, skretzoTransports);
+        log.lap("link vertices by skretzo transports");
+
         log.end();
-        return graph;
+        return new Graph(graphVertices, teleports);
     }
 
     /**
@@ -84,20 +91,31 @@ public class GraphBuilder {
     private void addTransports(Map<Coordinate, GraphVertex> graph, TransportJson[] transports) {
         for (TransportJson transport : transports) {
             if (transport.start == null) {
-                // This transport is a teleport, skip it
+                // This transport is a teleport, not a transport
                 continue;
             }
 
             if (transport.start.z != 0 || transport.end.z != 0) {
-                // This transport is out of bounds, skip it
+                // This transport is out of bounds, skip
                 continue;
             }
 
             final GraphVertex start = graph.get(new Coordinate(transport.start.x, transport.start.y));
             final GraphVertex end = graph.get(new Coordinate(transport.end.x, transport.end.y));
-            if (start != null && end != null) {
-                start.addEdgeTo(end, transport.duration, transport.title);
+
+            if (start == null || end == null) {
+                // This transport starts from or leads to nowhere
+                // System.out.println("Vertex for Transport " + transport.toString() + " doesn't exist.");
+                continue;
             }
+
+            final boolean duplicateEdgeFound = start.neighbors.stream().anyMatch(e -> e.to().coordinate.equals(end.coordinate));
+            if(duplicateEdgeFound) {
+                // System.out.println("Edge from Vertex " + start + " to Vertex " + end + " already exists. Duplicate Transport in data?");
+                continue;
+            }
+
+            start.addEdgeTo(end, transport.duration, transport.title);
         }
     }
 
