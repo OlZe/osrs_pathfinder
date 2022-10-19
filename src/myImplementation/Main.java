@@ -10,7 +10,6 @@ public class Main {
 
 
     public static void main(String[] args) throws IOException {
-
         final GraphBuilder builder = new GraphBuilder();
         final Graph graph = builder.buildGraph();
 
