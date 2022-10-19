@@ -1,8 +1,8 @@
 package myImplementation;
 
-import myImplementation.jsonClasses.movement.CoordinateJson;
-import myImplementation.jsonClasses.movement.MovementJson;
-import myImplementation.jsonClasses.movement.TransportJson;
+import myImplementation.jsonClasses.CoordinateJson;
+import myImplementation.jsonClasses.MovementJson;
+import myImplementation.jsonClasses.TransportJson;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,10 +13,10 @@ import java.util.Set;
 public class GraphBuilder {
 
     /**
-     * Reads the json file and builds a graph structure
+     * Reads the json files and builds a graph structure
      *
-     * @return A HashMap where each coordinate is mapped to its direct neighbours through a linked list
-     * @throws IOException can't read file
+     * @return The graph
+     * @throws IOException can't read files
      */
     public Graph buildGraph() throws IOException {
         TimeLogger log = new TimeLogger();

@@ -1,8 +1,8 @@
 package myImplementation;
 
 import com.google.gson.Gson;
-import myImplementation.jsonClasses.movement.MovementJson;
-import myImplementation.jsonClasses.movement.TransportJson;
+import myImplementation.jsonClasses.MovementJson;
+import myImplementation.jsonClasses.TransportJson;
 
 import java.io.BufferedReader;
 import java.io.IOException;

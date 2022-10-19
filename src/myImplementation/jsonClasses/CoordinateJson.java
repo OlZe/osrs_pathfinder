@@ -1,4 +1,4 @@
-package myImplementation.jsonClasses.movement;
+package myImplementation.jsonClasses;
 
 public class CoordinateJson {
     public int x;
