@@ -12,6 +12,16 @@ import java.util.Set;
 
 public class GraphBuilder {
 
+
+    public static final String WALK_NORTH_WEST = "walk north west";
+    public static final String WALK_SOUTH_EAST = "walk south east";
+    public static final String WALK_SOUTH_WEST = "walk south west";
+    public static final String WALK_NORTH_EAST = "walk north east";
+    public static final String WALK_EAST = "walk east";
+    public static final String WALK_WEST = "walk west";
+    public static final String WALK_NORTH = "walk north";
+    public static final String WALK_SOUTH = "walk south";
+
     /**
      * Reads the json files and builds a graph structure
      *
@@ -136,57 +146,57 @@ public class GraphBuilder {
             // North
             final GraphVertex northVertex = graph.get(coordinate.moveNorth());
             if (northVertex != null && this.canMoveNorth(coordinate, tileMap)) {
-                vertex.addEdgeTo(northVertex, (byte) 1, "walk north");
-                northVertex.addEdgeTo(vertex, (byte) 1, "walk south");
+                vertex.addEdgeTo(northVertex, (byte) 1, WALK_NORTH);
+                northVertex.addEdgeTo(vertex, (byte) 1, WALK_SOUTH);
             }
 
             // East
             final GraphVertex eastVertex = graph.get(coordinate.moveEast());
             if (eastVertex != null && this.canMoveEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(eastVertex, (byte) 1, "walk east");
-                eastVertex.addEdgeTo(vertex, (byte) 1, "walk west");
+                vertex.addEdgeTo(eastVertex, (byte) 1, WALK_EAST);
+                eastVertex.addEdgeTo(vertex, (byte) 1, WALK_WEST);
             }
 
             // South
             final GraphVertex southVertex = graph.get(coordinate.moveSouth());
             if (southVertex != null && this.canMoveSouth(coordinate, tileMap)) {
-                vertex.addEdgeTo(southVertex, (byte) 1, "walk south");
-                southVertex.addEdgeTo(vertex, (byte) 1, "walk north");
+                vertex.addEdgeTo(southVertex, (byte) 1, WALK_SOUTH);
+                southVertex.addEdgeTo(vertex, (byte) 1, WALK_NORTH);
             }
 
             // West
             final GraphVertex westVertex = graph.get(coordinate.moveWest());
             if (westVertex != null && this.canMoveWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(westVertex, (byte) 1, "walk west");
-                westVertex.addEdgeTo(vertex, (byte) 1, "walk east");
+                vertex.addEdgeTo(westVertex, (byte) 1, WALK_WEST);
+                westVertex.addEdgeTo(vertex, (byte) 1, WALK_EAST);
             }
 
             // North East
             final GraphVertex northEastVertex = graph.get(coordinate.moveNorth().moveEast());
             if (northEastVertex != null && this.canMoveNorthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(northEastVertex, (byte) 1, "walk north east");
-                northEastVertex.addEdgeTo(vertex, (byte) 1, "walk south west");
+                vertex.addEdgeTo(northEastVertex, (byte) 1, WALK_NORTH_EAST);
+                northEastVertex.addEdgeTo(vertex, (byte) 1, WALK_SOUTH_WEST);
             }
 
             // South East
             final GraphVertex southEastVertex = graph.get(coordinate.moveSouth().moveEast());
             if (southEastVertex != null && this.canMoveSouthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(southEastVertex, (byte) 1, "walk south east");
-                southEastVertex.addEdgeTo(vertex, (byte) 1, "walk north west");
+                vertex.addEdgeTo(southEastVertex, (byte) 1, WALK_SOUTH_EAST);
+                southEastVertex.addEdgeTo(vertex, (byte) 1, WALK_NORTH_WEST);
             }
 
             // South West
             final GraphVertex southWestVertex = graph.get(coordinate.moveSouth().moveWest());
             if (southWestVertex != null && this.canMoveSouthWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(southWestVertex, (byte) 1, "walk south west");
-                southWestVertex.addEdgeTo(vertex, (byte) 1, "walk north east");
+                vertex.addEdgeTo(southWestVertex, (byte) 1, WALK_SOUTH_WEST);
+                southWestVertex.addEdgeTo(vertex, (byte) 1, WALK_NORTH_EAST);
             }
 
             // North West
             final GraphVertex northWestVertex = graph.get(coordinate.moveNorth().moveWest());
             if (northWestVertex != null && this.canMoveNorthWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(northWestVertex, (byte) 1, "walk north west");
-                northWestVertex.addEdgeTo(vertex, (byte) 1, "walk south east");
+                vertex.addEdgeTo(northWestVertex, (byte) 1, WALK_NORTH_WEST);
+                northWestVertex.addEdgeTo(vertex, (byte) 1, WALK_SOUTH_EAST);
             }
         }
 
