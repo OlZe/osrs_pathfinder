@@ -53,7 +53,7 @@ public class GraphBuilder {
         log.lap("link vertices by transports");
 
         // find teleports
-        final Set<Teleport> teleports = this.findTeleports(transportsJson);
+        final Set<Teleport> teleports = this.findTeleports(transportsJson, graphVertices);
         log.lap("find teleports");
 
         // Deserialize Skretzo Data
@@ -74,7 +74,7 @@ public class GraphBuilder {
      * @param transportsJson The deserialized transport data
      * @return All teleports
      */
-    private Set<Teleport> findTeleports(TransportJson[] transportsJson) {
+    private Set<Teleport> findTeleports(TransportJson[] transportsJson, Map<Coordinate, GraphVertex> graphVertices) {
         Set<Teleport> teleports = new HashSet<>();
         for (TransportJson transport : transportsJson) {
             if (transport.start != null) {
@@ -82,7 +82,12 @@ public class GraphBuilder {
                 continue;
             }
             final Coordinate teleportCoordinate = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
-            teleports.add(new Teleport(teleportCoordinate, transport.title, transport.duration));
+            final GraphVertex teleportVertex = graphVertices.get(teleportCoordinate);
+            if(teleportVertex == null) {
+                System.out.println("Graph Builder: Coordinate " + transport.end + " for Teleport '" + transport.title + "' is not in graph.");
+                continue;
+            }
+            teleports.add(new Teleport(teleportVertex, transport.title, transport.duration));
         }
         return teleports;
     }

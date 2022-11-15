@@ -11,19 +11,16 @@ public class PathFinder {
         final Queue<DijkstraQueueEntry> queue = new PriorityQueue<>();
         final Set<GraphVertex> expandedVertices = new HashSet<>();
 
-        // Add starting points to queue
+        // Add starting position to queue
         final GraphVertex startVertex = graph.vertices().get(start);
         assert (startVertex != null);
         queue.add(new DijkstraQueueEntry(startVertex, null, "start", 0));
-        for (Teleport teleport : graph.teleports()) {
-            final GraphVertex tpVertex = graph.vertices().get(teleport.destination());
-            if (tpVertex == null) {
-                // Teleport destination does not exist in graph, skip
-                System.out.println("Teleport : " + teleport.title() + " coordinate " + teleport.destination() + " is not in graph.");
-                continue;
-            }
-            queue.add(new DijkstraQueueEntry(tpVertex, null, teleport.title(), teleport.duration()));
-        }
+
+        // Add teleports to queue
+        graph.teleports().stream()
+                .map(tp -> new DijkstraQueueEntry(tp.destination(), null, tp.title(), tp.duration()))
+                .forEachOrdered(queue::add);
+
 
         while (queue.peek() != null) {
 
@@ -41,8 +38,7 @@ public class PathFinder {
                 // Add neighbours of vertex into queue
                 for (GraphEdge neighbor : currentVertex.neighbors) {
                     final int newCostToNeighbour = current.totalCost + neighbor.cost();
-                    final DijkstraQueueEntry newQueueEntry = new DijkstraQueueEntry(neighbor.to(), current, neighbor.methodOfMovement(), newCostToNeighbour);
-                    queue.add(newQueueEntry);
+                    queue.add(new DijkstraQueueEntry(neighbor.to(), current, neighbor.methodOfMovement(), newCostToNeighbour));
                 }
             }
         }
@@ -73,10 +69,7 @@ public class PathFinder {
     }
 
 
-    private record DijkstraQueueEntry(GraphVertex vertex,
-                                      DijkstraQueueEntry previous,
-                                      String methodOfMovement,
-                                      int totalCost)
+    private record DijkstraQueueEntry(GraphVertex vertex, DijkstraQueueEntry previous, String methodOfMovement, int totalCost)
             implements Comparable<DijkstraQueueEntry> {
 
         public boolean hasPrevious() {
