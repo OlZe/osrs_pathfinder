@@ -81,11 +81,7 @@ public class GraphBuilder {
                 // This is a point-to-point transport, not a teleport
                 continue;
             }
-            if (transport.end.z != 0) {
-                // This teleport is out of bounds, skip it
-                continue;
-            }
-            final Coordinate teleportCoordinate = new Coordinate(transport.end.x, transport.end.y);
+            final Coordinate teleportCoordinate = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
             teleports.add(new Teleport(teleportCoordinate, transport.title, transport.duration));
         }
         return teleports;
@@ -105,17 +101,12 @@ public class GraphBuilder {
                 continue;
             }
 
-            if (transport.start.z != 0 || transport.end.z != 0) {
-                // This transport is out of bounds, skip
-                continue;
-            }
-
-            final GraphVertex start = graph.get(new Coordinate(transport.start.x, transport.start.y));
-            final GraphVertex end = graph.get(new Coordinate(transport.end.x, transport.end.y));
+            final GraphVertex start = graph.get(new Coordinate(transport.start.x, transport.start.y, transport.start.z));
+            final GraphVertex end = graph.get(new Coordinate(transport.end.x, transport.end.y, transport.end.z));
 
             if (start == null || end == null) {
                 // This transport starts from or leads to nowhere
-                // System.out.println("Vertex for Transport " + transport.toString() + " doesn't exist.");
+                System.out.println("Vertex for Transport '" + transport.title + "' from " + transport.start + " to " + transport.end + " doesn't exist.");
                 continue;
             }
 
@@ -266,7 +257,7 @@ public class GraphBuilder {
 
         // Parse walkable json tiles
         for (CoordinateJson tileJson : movementJson.walkable) {
-            final Coordinate coordinate = new Coordinate(tileJson.x, tileJson.y);
+            final Coordinate coordinate = new Coordinate(tileJson.x, tileJson.y, tileJson.z);
             final TileObstacles tile = new TileObstacles();
             tiles.put(coordinate, tile);
         }
@@ -276,7 +267,7 @@ public class GraphBuilder {
         assert (movementJson.obstaclePositions.length == movementJson.obstacleValues.length);
         for (int i = 0; i < movementJson.obstaclePositions.length; i++) {
             final CoordinateJson obstacleCoordinateJson = movementJson.obstaclePositions[i];
-            final Coordinate obstacleCoordinate = new Coordinate(obstacleCoordinateJson.x, obstacleCoordinateJson.y);
+            final Coordinate obstacleCoordinate = new Coordinate(obstacleCoordinateJson.x, obstacleCoordinateJson.y, obstacleCoordinateJson.z);
             final TileObstacles tile = tiles.get(obstacleCoordinate);
 
             if (tile != null) {

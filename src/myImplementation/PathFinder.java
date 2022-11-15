@@ -17,7 +17,11 @@ public class PathFinder {
         queue.add(new PriorityQueueEntry(new BacktrackableVertex(startVertex, null, "start"), 0));
         for (Teleport teleport : graph.teleports()) {
             final GraphVertex tpVertex = graph.vertices().get(teleport.destination());
-            assert (tpVertex != null);
+            if(tpVertex == null) {
+                // Teleport destination does not exist in graph, skip
+                System.out.println("Teleport : " + teleport.title() + " coordinate " + teleport.destination() + " is not in graph.");
+                continue;
+            }
             queue.add(new PriorityQueueEntry(new BacktrackableVertex(tpVertex, null, teleport.title()), teleport.duration()));
         }
 
