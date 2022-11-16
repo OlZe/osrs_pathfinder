@@ -5,10 +5,7 @@ import myImplementation.jsonClasses.MovementJson;
 import myImplementation.jsonClasses.TransportJson;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class GraphBuilder {
 
@@ -44,85 +41,62 @@ public class GraphBuilder {
         final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
         log.lap("link walkable vertices");
 
-        // Deserialize Transport Data
-        final TransportJson[] transportsJson = new DataDeserializer().deserializeTransportData();
-        log.lap("deserialize transport data");
+        // Deserialize transport Data
+        final TransportJson[] cooksTransportData = new DataDeserializer().deserializeTransportData();
+        log.lap("deserialize cooks transport data");
 
-        // Add Transports to Graph
-        this.addTransports(graphVertices, transportsJson);
-        log.lap("link vertices by transports");
-
-        // find teleports
-        final Set<Teleport> teleports = this.findTeleports(transportsJson, graphVertices);
-        log.lap("find teleports");
+        // process transports
+        final Set<Teleport> teleports = this.addTransports(graphVertices, cooksTransportData);
+        log.lap("process cooks transports");
 
         // Deserialize Skretzo Data
         final TransportJson[] skretzoTransports = new DataDeserializer().deserializeSkretzoData();
-        log.lap("deserialize skretzo data");
+        log.lap("deserialize skretzo transport data");
 
-        // Add skretzo transports
+        // process skretzo transports
         this.addTransports(graphVertices, skretzoTransports);
-        log.lap("link vertices by skretzo transports");
+        log.lap("process skretzo transports");
 
         log.end();
         return new Graph(graphVertices, teleports);
     }
 
     /**
-     * Finds teleports in transport data
-     *
-     * @param transportsJson The deserialized transport data
-     * @return All teleports
-     */
-    private Set<Teleport> findTeleports(TransportJson[] transportsJson, Map<Coordinate, GraphVertex> graphVertices) {
-        Set<Teleport> teleports = new HashSet<>();
-        for (TransportJson transport : transportsJson) {
-            if (transport.start != null) {
-                // This is a point-to-point transport, not a teleport
-                continue;
-            }
-            final Coordinate teleportCoordinate = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
-            final GraphVertex teleportVertex = graphVertices.get(teleportCoordinate);
-            if(teleportVertex == null) {
-                System.out.println("Graph Builder: Coordinate " + transport.end + " for Teleport '" + transport.title + "' is not in graph.");
-                continue;
-            }
-            teleports.add(new Teleport(teleportVertex, transport.title, transport.duration));
-        }
-        return teleports;
-    }
-
-    /**
      * links vertices according to point-to-point transports (fairy rings etc.).
-     * Does NOT include teleports!
+     * Returns a Set of Teleports
      *
      * @param graph      The vertices of which just walkable ones have been linked
      * @param transports The deserialized transport data
      */
-    private void addTransports(Map<Coordinate, GraphVertex> graph, TransportJson[] transports) {
+    private Set<Teleport> addTransports(Map<Coordinate, GraphVertex> graph, TransportJson[] transports) {
+        final Set<Teleport> teleports = new HashSet<>();
         for (TransportJson transport : transports) {
+            assert (transport.end != null);
+
             if (transport.start == null) {
-                // This transport is a teleport, not a transport
-                continue;
+                // This transport is a teleport
+                final Coordinate tpDest = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
+                final GraphVertex tpDestVertex = graph.get(tpDest);
+                if (tpDestVertex == null) {
+                    System.err.println("Vertex " + tpDest + " for Teleport '" + transport.title + "' is not in graph.");
+                    continue;
+                }
+                teleports.add(new Teleport(tpDestVertex, transport.title, transport.duration));
+            } else {
+                // This transport is a point-to-point connection
+                final GraphVertex start = graph.get(new Coordinate(transport.start.x, transport.start.y, transport.start.z));
+                final GraphVertex end = graph.get(new Coordinate(transport.end.x, transport.end.y, transport.end.z));
+
+                if (start == null || end == null) {
+                    System.err.println("Vertices for Transport '" + transport.title + "' from " + transport.start + " to " + transport.end + " doesn't exist.");
+                    continue;
+                }
+
+                // TODO implement duplicate edge detection
+                start.addEdgeTo(end, transport.duration, transport.title);
             }
-
-            final GraphVertex start = graph.get(new Coordinate(transport.start.x, transport.start.y, transport.start.z));
-            final GraphVertex end = graph.get(new Coordinate(transport.end.x, transport.end.y, transport.end.z));
-
-            if (start == null || end == null) {
-                // This transport starts from or leads to nowhere
-                System.out.println("Vertex for Transport '" + transport.title + "' from " + transport.start + " to " + transport.end + " doesn't exist.");
-                continue;
-            }
-
-            final boolean duplicateEdgeFound = start.neighbors.stream().anyMatch(e -> e.to().coordinate.equals(end.coordinate));
-            if(duplicateEdgeFound) {
-                // System.out.println("Edge from Vertex " + start + " to Vertex " + end + " already exists. Duplicate Transport in data?");
-                continue;
-            }
-
-            start.addEdgeTo(end, transport.duration, transport.title);
         }
+        return teleports;
     }
 
     /**
