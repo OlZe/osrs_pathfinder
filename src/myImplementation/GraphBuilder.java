@@ -62,44 +62,6 @@ public class GraphBuilder {
     }
 
     /**
-     * links vertices according to point-to-point transports (fairy rings etc.).
-     * Returns a Set of Teleports
-     *
-     * @param graph      The vertices of which just walkable ones have been linked
-     * @param transports The deserialized transport data
-     */
-    private Set<Teleport> addTransports(Map<Coordinate, GraphVertex> graph, TransportJson[] transports) {
-        final Set<Teleport> teleports = new HashSet<>();
-        for (TransportJson transport : transports) {
-            assert (transport.end != null);
-
-            if (transport.start == null) {
-                // This transport is a teleport
-                final Coordinate tpDest = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
-                final GraphVertex tpDestVertex = graph.get(tpDest);
-                if (tpDestVertex == null) {
-                    System.err.println("Vertex " + tpDest + " for Teleport '" + transport.title + "' is not in graph.");
-                    continue;
-                }
-                teleports.add(new Teleport(tpDestVertex, transport.title, transport.duration));
-            } else {
-                // This transport is a point-to-point connection
-                final GraphVertex start = graph.get(new Coordinate(transport.start.x, transport.start.y, transport.start.z));
-                final GraphVertex end = graph.get(new Coordinate(transport.end.x, transport.end.y, transport.end.z));
-
-                if (start == null || end == null) {
-                    System.err.println("Vertices for Transport '" + transport.title + "' from " + transport.start + " to " + transport.end + " doesn't exist.");
-                    continue;
-                }
-
-                // TODO implement duplicate edge detection
-                start.addEdgeTo(end, transport.duration, transport.title);
-            }
-        }
-        return teleports;
-    }
-
-    /**
      * @param tileMap A Map of Tiles
      * @return A Graph linking all walkable tiles together
      */
@@ -171,6 +133,66 @@ public class GraphBuilder {
         }
 
         return graph;
+    }
+
+    /**
+     * links vertices according to point-to-point transports (fairy rings etc.).
+     * Returns a Set of Teleports
+     *
+     * @param graph      The vertices of which just walkable ones have been linked
+     * @param transports The deserialized transport data
+     */
+    private Set<Teleport> addTransports(Map<Coordinate, GraphVertex> graph, TransportJson[] transports) {
+        final Set<Teleport> teleports = new HashSet<>();
+        for (TransportJson transport : transports) {
+            assert (transport.end != null);
+
+            if (transport.start == null) {
+                addTeleportIfExists(graph, teleports, transport);
+            } else {
+                linkVerticesIfExists(graph, transport);
+            }
+        }
+        return teleports;
+    }
+
+    private static void addTeleportIfExists(final Map<Coordinate, GraphVertex> graph,
+                                            final Set<Teleport> teleports, final TransportJson transport) {
+        final Coordinate tpDest = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
+        final GraphVertex tpDestVertex = graph.get(tpDest);
+        if (tpDestVertex == null) {
+            System.err.println("Vertex " + tpDest + " for Teleport '" + transport.title + "' is not in graph.");
+            return;
+        }
+        teleports.add(new Teleport(tpDestVertex, transport.title, transport.duration));
+    }
+
+    /**
+     * Adds an edge in the graph according to the given transport
+     * Does not add duplicate edges
+     *
+     * @param graph The graph
+     * @param transport The transportJson
+     */
+    private static void linkVerticesIfExists(final Map<Coordinate, GraphVertex> graph, final TransportJson transport) {
+        final Coordinate startCoord = new Coordinate(transport.start.x, transport.start.y, transport.start.z);
+        final Coordinate endCoord = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
+        final GraphVertex startVertex = graph.get(startCoord);
+        final GraphVertex endVertex = graph.get(endCoord);
+
+        if (startVertex == null || endVertex == null) {
+            System.err.println("Vertices for Transport '" + transport.title + "' from " + transport.start + " to " + transport.end + " are not in graph.");
+            return;
+        }
+
+        final Optional<GraphEdge> existingEdge = startVertex.neighbors.stream().filter(e -> e.to().coordinate.equals(endCoord)).findAny();
+        if (existingEdge.isPresent()) {
+            System.err.println("Duplicate edge " + startCoord + "->" + endCoord + ": "
+                    + "Existing edge: '" + existingEdge.get().methodOfMovement() + "' cost " + existingEdge.get().cost() + "; "
+                    + "Ignoring new edge: '" + transport.title + "' cost " + transport.duration + ".");
+            return;
+        }
+        startVertex.addEdgeTo(endVertex, transport.duration, transport.title);
     }
 
     private boolean canMoveNorth(Coordinate coordinate, Map<Coordinate, TileObstacles> tileMap) {
