@@ -1,8 +1,8 @@
-package myImplementation;
+package wiki.runescape.oldschool;
 
 import java.util.List;
 
-public record PathFinderResult(boolean pathFound, List<PathFinderResult.Movement> path, long computeTime) {
+public record PathFinderResult(boolean pathFound, List<Movement> path, long computeTime) {
 
     public record Movement(Coordinate destination, String methodOfMovement) {
 

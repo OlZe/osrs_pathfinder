@@ -1,4 +1,4 @@
-package myImplementation.jsonClasses;
+package wiki.runescape.oldschool.jsonClasses;
 
 public class TransportJson {
     public CoordinateJson start;

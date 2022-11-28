@@ -1,4 +1,4 @@
-package myImplementation;
+package wiki.runescape.oldschool;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -1,9 +1,9 @@
-package myImplementation;
+package wiki.runescape.oldschool;
 
 import com.google.gson.Gson;
-import myImplementation.jsonClasses.CoordinateJson;
-import myImplementation.jsonClasses.MovementJson;
-import myImplementation.jsonClasses.TransportJson;
+import wiki.runescape.oldschool.jsonClasses.CoordinateJson;
+import wiki.runescape.oldschool.jsonClasses.MovementJson;
+import wiki.runescape.oldschool.jsonClasses.TransportJson;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,9 +13,9 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public class DataDeserializer {
-    private final static String MOVEMENT_FILE_PATH = "movement.json";
-    private final static String TRANSPORTS_FILE_PATH = "transports.json";
-    private final static String SKRETZO_FILE_PATH = "skretzo_data.txt";
+    private final static String MOVEMENT_FILE_PATH = "src/main/resources/movement.json";
+    private final static String TRANSPORTS_FILE_PATH = "src/main/resources/transports.json";
+    private final static String SKRETZO_FILE_PATH = "src/main/resources/skretzo_data.txt";
 
     /**
      * Reads the file "movement.json"

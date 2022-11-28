@@ -1,4 +1,4 @@
-package myImplementation;
+package wiki.runescape.oldschool;
 
 public record Coordinate(int x, int y, int z) {
 

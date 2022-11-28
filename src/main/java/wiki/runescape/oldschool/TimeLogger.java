@@ -1,4 +1,4 @@
-package myImplementation;
+package wiki.runescape.oldschool;
 
 /**
  * Prints activities to the console and logs their times

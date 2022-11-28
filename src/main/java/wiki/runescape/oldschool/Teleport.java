@@ -1,4 +1,4 @@
-package myImplementation;
+package wiki.runescape.oldschool;
 
 /**
  * Represents a teleport that can be used anywhere in the game.

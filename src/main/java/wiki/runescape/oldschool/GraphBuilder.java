@@ -1,8 +1,8 @@
-package myImplementation;
+package wiki.runescape.oldschool;
 
-import myImplementation.jsonClasses.CoordinateJson;
-import myImplementation.jsonClasses.MovementJson;
-import myImplementation.jsonClasses.TransportJson;
+import wiki.runescape.oldschool.jsonClasses.CoordinateJson;
+import wiki.runescape.oldschool.jsonClasses.MovementJson;
+import wiki.runescape.oldschool.jsonClasses.TransportJson;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,7 +34,7 @@ public class GraphBuilder {
         log.lap("deserialize movement data");
 
         // Build Tile Map
-        final Map<Coordinate, GraphBuilder.TileObstacles> tiles = this.movementDataToMapOfTiles(movementJson);
+        final Map<Coordinate, TileObstacles> tiles = this.movementDataToMapOfTiles(movementJson);
         log.lap("build tile map");
 
         // Build walkable graph
