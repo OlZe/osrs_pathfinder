@@ -14,4 +14,8 @@ public record Graph(Map<Coordinate, GraphVertex> vertices, Set<Teleport> telepor
         return "";
     }
 
+    public boolean isWalkable(final Coordinate coordinate) {
+        return this.vertices.get(coordinate) != null;
+    }
+
 }
