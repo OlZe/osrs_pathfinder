@@ -1,9 +1,9 @@
-package wiki.runescape.oldschool;
+package wiki.runescape.oldschool.data_deserialization;
 
 import com.google.gson.Gson;
-import wiki.runescape.oldschool.jsonClasses.CoordinateJson;
-import wiki.runescape.oldschool.jsonClasses.MovementJson;
-import wiki.runescape.oldschool.jsonClasses.TransportJson;
+import wiki.runescape.oldschool.data_deserialization.jsonClasses.CoordinateJson;
+import wiki.runescape.oldschool.data_deserialization.jsonClasses.MovementJson;
+import wiki.runescape.oldschool.data_deserialization.jsonClasses.TransportJson;
 
 import java.io.BufferedReader;
 import java.io.IOException;

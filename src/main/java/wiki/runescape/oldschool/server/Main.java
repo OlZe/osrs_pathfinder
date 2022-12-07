@@ -1,6 +1,7 @@
-package wiki.runescape.oldschool;
+package wiki.runescape.oldschool.server;
 
 import com.sun.net.httpserver.HttpServer;
+import wiki.runescape.oldschool.logic.Coordinate;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

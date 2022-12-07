@@ -1,4 +1,4 @@
-package wiki.runescape.oldschool;
+package wiki.runescape.oldschool.logic;
 
 import java.util.Map;
 import java.util.Set;

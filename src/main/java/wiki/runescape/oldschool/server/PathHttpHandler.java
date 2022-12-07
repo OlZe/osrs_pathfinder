@@ -1,8 +1,9 @@
-package wiki.runescape.oldschool;
+package wiki.runescape.oldschool.server;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import wiki.runescape.oldschool.logic.*;
 
 import java.io.IOException;
 import java.util.Arrays;

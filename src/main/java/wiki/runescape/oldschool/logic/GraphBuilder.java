@@ -1,8 +1,10 @@
-package wiki.runescape.oldschool;
+package wiki.runescape.oldschool.logic;
 
-import wiki.runescape.oldschool.jsonClasses.CoordinateJson;
-import wiki.runescape.oldschool.jsonClasses.MovementJson;
-import wiki.runescape.oldschool.jsonClasses.TransportJson;
+import wiki.runescape.oldschool.data_deserialization.DataDeserializer;
+import wiki.runescape.oldschool.TimeLogger;
+import wiki.runescape.oldschool.data_deserialization.jsonClasses.CoordinateJson;
+import wiki.runescape.oldschool.data_deserialization.jsonClasses.MovementJson;
+import wiki.runescape.oldschool.data_deserialization.jsonClasses.TransportJson;
 
 import java.io.IOException;
 import java.util.*;
