@@ -11,14 +11,19 @@ public class PathFinder {
         final Queue<DijkstraQueueEntry> queue = new PriorityQueue<>();
         final Set<GraphVertex> expandedVertices = new HashSet<>();
 
-        // Add starting position to queue
+        // Determine starting position
         final GraphVertex startVertex = graph.vertices().get(start);
         assert (startVertex != null);
-        queue.add(new DijkstraQueueEntry(startVertex, null, "start", 0));
+        final DijkstraQueueEntry firstDijkstraQueueEntry = new DijkstraQueueEntry(startVertex, null, "start", 0);
+
+        // Add neighbours of starting position to queue
+        startVertex.neighbors.stream()
+                .map(neighbor -> new DijkstraQueueEntry(neighbor.to(), firstDijkstraQueueEntry, neighbor.methodOfMovement(), neighbor.cost()))
+                .forEachOrdered(queue::add);
 
         // Add teleports to queue
         graph.teleports().stream()
-                .map(tp -> new DijkstraQueueEntry(tp.destination(), null, tp.title(), tp.duration()))
+                .map(tp -> new DijkstraQueueEntry(tp.destination(), firstDijkstraQueueEntry, tp.title(), tp.duration()))
                 .forEachOrdered(queue::add);
 
 
