@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpHandler;
 import wiki.runescape.oldschool.logic.*;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,8 @@ public class PathHttpHandler implements HttpHandler {
 
     @Override
     public void handle(final HttpExchange exchange) throws IOException {
+        System.out.println(LocalTime.now() + " " + exchange.getRequestMethod() + " " + exchange.getRequestURI());
+
         final Map<String, String> urlParams;
         try {
             urlParams = convertQueryStringToMap(exchange.getRequestURI().getQuery());
@@ -60,6 +63,7 @@ public class PathHttpHandler implements HttpHandler {
         final PathFinderResult path = pathFinder.findPath(graph, from, to);
         final byte[] response = gson.toJson(path).getBytes();
         exchange.getResponseHeaders().add("Content-Type", "application/json");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, response.length);
         exchange.getResponseBody().write(response);
         exchange.close();
@@ -68,6 +72,7 @@ public class PathHttpHandler implements HttpHandler {
 
     private static void returnError(final HttpExchange exchange, final String errorMessage) throws IOException {
         final byte[] errorMessageBytes = errorMessage.getBytes();
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(400, errorMessageBytes.length);
         exchange.getResponseBody().write(errorMessageBytes);
         exchange.close();
