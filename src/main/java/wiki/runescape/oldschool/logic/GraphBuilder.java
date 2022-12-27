@@ -70,13 +70,21 @@ public class GraphBuilder {
     private Map<Coordinate, GraphVertex> mapOfTilesToWalkableGraph(Map<Coordinate, TileObstacles> tileMap) {
         Map<Coordinate, GraphVertex> graph = new HashMap<>();
 
+        // Put tiles into graph
         for (Map.Entry<Coordinate, TileObstacles> tile : tileMap.entrySet()) {
             final Coordinate coordinate = tile.getKey();
-
             final GraphVertex vertex = new GraphVertex(coordinate);
             graph.put(coordinate, vertex);
+        }
 
-            // Check if there are neighbouring vertices, if so link them if traversable
+        // Pass 1
+        // Link vertical/horizontal walking ways *first* so they get prioritized when pathfinding
+        // This is important to avoid zig-zag paths which are the same length but not user friendly
+        // Link north and east neighbours
+        for(Map.Entry<Coordinate, TileObstacles> tile : tileMap.entrySet()) {
+            final Coordinate coordinate = tile.getKey();
+            final GraphVertex vertex = graph.get(coordinate);
+
             // North
             final GraphVertex northVertex = graph.get(coordinate.moveNorth());
             if (northVertex != null && this.canMoveNorth(coordinate, tileMap)) {
@@ -90,20 +98,14 @@ public class GraphBuilder {
                 vertex.addEdgeTo(eastVertex, (byte) 1, WALK_EAST);
                 eastVertex.addEdgeTo(vertex, (byte) 1, WALK_WEST);
             }
+        }
 
-            // South
-            final GraphVertex southVertex = graph.get(coordinate.moveSouth());
-            if (southVertex != null && this.canMoveSouth(coordinate, tileMap)) {
-                vertex.addEdgeTo(southVertex, (byte) 1, WALK_SOUTH);
-                southVertex.addEdgeTo(vertex, (byte) 1, WALK_NORTH);
-            }
-
-            // West
-            final GraphVertex westVertex = graph.get(coordinate.moveWest());
-            if (westVertex != null && this.canMoveWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(westVertex, (byte) 1, WALK_WEST);
-                westVertex.addEdgeTo(vertex, (byte) 1, WALK_EAST);
-            }
+        // Pass 2
+        // Link diagonal paths
+        // Link north east and south east neighbours
+        for (Map.Entry<Coordinate, TileObstacles> tile : tileMap.entrySet()) {
+            final Coordinate coordinate = tile.getKey();
+            final GraphVertex vertex = graph.get(coordinate);
 
             // North East
             final GraphVertex northEastVertex = graph.get(coordinate.moveNorth().moveEast());
@@ -117,20 +119,6 @@ public class GraphBuilder {
             if (southEastVertex != null && this.canMoveSouthEast(coordinate, tileMap)) {
                 vertex.addEdgeTo(southEastVertex, (byte) 1, WALK_SOUTH_EAST);
                 southEastVertex.addEdgeTo(vertex, (byte) 1, WALK_NORTH_WEST);
-            }
-
-            // South West
-            final GraphVertex southWestVertex = graph.get(coordinate.moveSouth().moveWest());
-            if (southWestVertex != null && this.canMoveSouthWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(southWestVertex, (byte) 1, WALK_SOUTH_WEST);
-                southWestVertex.addEdgeTo(vertex, (byte) 1, WALK_NORTH_EAST);
-            }
-
-            // North West
-            final GraphVertex northWestVertex = graph.get(coordinate.moveNorth().moveWest());
-            if (northWestVertex != null && this.canMoveNorthWest(coordinate, tileMap)) {
-                vertex.addEdgeTo(northWestVertex, (byte) 1, WALK_NORTH_WEST);
-                northWestVertex.addEdgeTo(vertex, (byte) 1, WALK_SOUTH_EAST);
             }
         }
 

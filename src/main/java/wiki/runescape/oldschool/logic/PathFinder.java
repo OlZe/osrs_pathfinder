@@ -8,7 +8,7 @@ public class PathFinder {
     public PathFinderResult findPath(Graph graph, Coordinate start, Coordinate end) {
         final long startTime = System.currentTimeMillis();
 
-        final Queue<DijkstraQueueEntry> queue = new PriorityQueue<>();
+        final PriorityQueueTieByTime<DijkstraQueueEntry> queue = new PriorityQueueTieByTime<>();
         final Set<GraphVertex> expandedVertices = new HashSet<>();
 
         // Determine starting position
