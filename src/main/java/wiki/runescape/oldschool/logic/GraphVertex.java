@@ -30,7 +30,7 @@ public class GraphVertex {
     @Override
     public String toString() {
         final String neighbours = this.neighbors.stream()
-                .map(e -> e.methodOfMovement())
+                .map(GraphEdge::methodOfMovement)
                 .map(s -> switch (s) { // Shorten walking strings for better debugging
                     case GraphBuilder.WALK_NORTH -> "N";
                     case GraphBuilder.WALK_EAST -> "E";
