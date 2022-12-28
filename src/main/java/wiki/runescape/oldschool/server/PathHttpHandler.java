@@ -6,10 +6,9 @@ import com.sun.net.httpserver.HttpHandler;
 import wiki.runescape.oldschool.logic.*;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 public class PathHttpHandler implements HttpHandler {
 
@@ -24,43 +23,32 @@ public class PathHttpHandler implements HttpHandler {
     public void handle(final HttpExchange exchange) throws IOException {
         System.out.println(LocalTime.now() + " " + exchange.getRequestMethod() + " " + exchange.getRequestURI());
 
-        final Map<String, String> urlParams;
-        try {
-            urlParams = convertQueryStringToMap(exchange.getRequestURI().getQuery());
+        final PathRequestJson requestBody;
+        try (final Reader requestBodyReader = new InputStreamReader(exchange.getRequestBody())){
+            requestBody = gson.fromJson(requestBodyReader, PathRequestJson.class);
         } catch (Exception e) {
-            returnError(exchange, "Cannot parse query parameters");
-            return;
+            returnError(exchange, "Could not parse request body");
+            throw new RuntimeException(e);
         }
 
-        if (!urlParams.containsKey("from") || !urlParams.containsKey("to")) {
-            returnError(exchange, "Expected query parameters 'from' and 'to'");
-            return;
+        if(requestBody.from() == null || requestBody.to() == null || requestBody.blacklist() == null) {
+            returnError(exchange, "Request body is missing fields");
         }
 
-        final Coordinate from;
-        final Coordinate to;
-        try {
-            from = this.convertCoordinateStringToObject(urlParams.get("from"));
-            to = this.convertCoordinateStringToObject(urlParams.get("to"));
-        } catch (NumberFormatException e) {
-            returnError(exchange, "Cannot parse a given coordinate. Expected format: 'int,int,int'");
-            return;
-        }
-
-        if (!graph.isWalkable(from) && !graph.isWalkable(to)) {
+        if (!graph.isWalkable(requestBody.from()) && !graph.isWalkable(requestBody.to())) {
             returnError(exchange, "Start and end tile are not walkable");
             return;
         }
-        if (!graph.isWalkable(from)) {
+        if (!graph.isWalkable(requestBody.from())) {
             returnError(exchange, "Start tile is not walkable");
             return;
         }
-        if (!graph.isWalkable(to)) {
+        if (!graph.isWalkable(requestBody.to())) {
             returnError(exchange, "End tile is not walkable");
             return;
         }
 
-        final PathFinderResult path = pathFinder.findPath(graph, from, to);
+        final PathFinderResult path = pathFinder.findPath(graph, requestBody.from(), requestBody.to(), requestBody.blacklist());
         final byte[] response = gson.toJson(path).getBytes();
         exchange.getResponseHeaders().add("Content-Type", "application/json");
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
@@ -77,23 +65,4 @@ public class PathHttpHandler implements HttpHandler {
         exchange.getResponseBody().write(errorMessageBytes);
         exchange.close();
     }
-
-    private static Map<String, String> convertQueryStringToMap(final String query) {
-        Map<String, String> map = new HashMap<>();
-        Arrays.stream(query                                  // "from=0,0,0&to=1,1,1"
-                        .split("&"))                            // "from=0,0,0"  "to=1,1,1"
-                .map(s -> s.split("="))                 // "'from' '0,0,0'"  "'to' '1,1,1'"
-                .forEachOrdered(q -> map.put(q[0], q[1]));
-        return map;
-    }
-
-    private Coordinate convertCoordinateStringToObject(final String coordinate) {
-        final String[] coordinates = coordinate.split(",");
-        if (coordinates.length != 3) {
-            throw new NumberFormatException();
-        }
-        return new Coordinate(Integer.parseInt(coordinates[0]), Integer.parseInt(coordinates[1]), Integer.parseInt(coordinates[2]));
-    }
-
-
 }

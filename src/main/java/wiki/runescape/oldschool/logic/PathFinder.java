@@ -5,7 +5,7 @@ import java.util.*;
 public class PathFinder {
 
 
-    public PathFinderResult findPath(Graph graph, Coordinate start, Coordinate end) {
+    public PathFinderResult findPath(Graph graph, Coordinate start, Coordinate end, Set<String> blacklist) {
         final long startTime = System.currentTimeMillis();
 
         final PriorityQueueTieByTime<DijkstraQueueEntry> queue = new PriorityQueueTieByTime<>();
@@ -18,11 +18,13 @@ public class PathFinder {
 
         // Add neighbours of starting position to queue
         startVertex.neighbors.stream()
+                .filter(neighbor -> !blacklist.contains(neighbor.methodOfMovement()))
                 .map(neighbor -> new DijkstraQueueEntry(neighbor.to(), firstDijkstraQueueEntry, neighbor.methodOfMovement(), neighbor.cost()))
                 .forEachOrdered(queue::add);
 
         // Add teleports to queue
         graph.teleports().stream()
+                .filter(tp -> !blacklist.contains(tp.title()))
                 .map(tp -> new DijkstraQueueEntry(tp.destination(), firstDijkstraQueueEntry, tp.title(), tp.duration()))
                 .forEachOrdered(queue::add);
 
@@ -41,10 +43,10 @@ public class PathFinder {
                 }
 
                 // Add neighbours of vertex into queue
-                for (GraphEdge neighbor : currentVertex.neighbors) {
-                    final int newCostToNeighbour = current.totalCost + neighbor.cost();
-                    queue.add(new DijkstraQueueEntry(neighbor.to(), current, neighbor.methodOfMovement(), newCostToNeighbour));
-                }
+                currentVertex.neighbors.stream()
+                        .filter(neighbor -> !blacklist.contains(neighbor.methodOfMovement()))
+                        .map(n -> new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), (current.totalCost()) + n.cost()))
+                        .forEachOrdered(queue::add);
             }
         }
 
