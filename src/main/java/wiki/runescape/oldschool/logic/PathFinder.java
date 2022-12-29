@@ -16,6 +16,11 @@ public class PathFinder {
         assert (startVertex != null);
         final DijkstraQueueEntry firstDijkstraQueueEntry = new DijkstraQueueEntry(startVertex, null, "start", 0);
 
+        // start == end, return
+        if(start.equals(end)) {
+            return new PathFinderResult(true, this.backtrack(firstDijkstraQueueEntry), System.currentTimeMillis() - startTime);
+        }
+
         // Add neighbours of starting position to queue
         startVertex.neighbors.stream()
                 .filter(neighbor -> !blacklist.contains(neighbor.methodOfMovement()))
