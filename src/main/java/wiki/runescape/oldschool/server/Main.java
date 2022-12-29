@@ -24,6 +24,7 @@ public class Main {
 
         final HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         server.createContext("/path.json", new PathHttpHandler(graph, pathFinder));
+        server.createContext("/transports-teleports.json", new TransportsTeleportsHttpHandler(graph));
         server.setExecutor(null);
         server.start();
         System.out.println("Server listening on port " + PORT + "...");
