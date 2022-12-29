@@ -12,11 +12,13 @@ import java.time.LocalTime;
 
 public class PathHttpHandler implements HttpHandler {
 
-    private final Graph graph = new GraphBuilder().buildGraph();
-    private final PathFinder pathFinder = new PathFinder();
+    private final Graph graph;
+    private final PathFinder pathFinder;
     private final Gson gson = new Gson();
 
-    public PathHttpHandler() throws IOException {
+    public PathHttpHandler(Graph graph, PathFinder pathFinder) {
+        this.graph = graph;
+        this.pathFinder = pathFinder;
     }
 
     @Override

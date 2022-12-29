@@ -2,6 +2,9 @@ package wiki.runescape.oldschool.server;
 
 import com.sun.net.httpserver.HttpServer;
 import wiki.runescape.oldschool.logic.Coordinate;
+import wiki.runescape.oldschool.logic.Graph;
+import wiki.runescape.oldschool.logic.GraphBuilder;
+import wiki.runescape.oldschool.logic.PathFinder;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -15,9 +18,12 @@ public class Main {
     private static final int PORT = 8100;
 
     public static void main(String[] args) throws IOException {
+        final Graph graph = new GraphBuilder().buildGraph();
+        final PathFinder pathFinder = new PathFinder();
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
-        server.createContext("/path.json", new PathHttpHandler());
+
+        final HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
+        server.createContext("/path.json", new PathHttpHandler(graph, pathFinder));
         server.setExecutor(null);
         server.start();
         System.out.println("Server listening on port " + PORT + "...");
