@@ -7,13 +7,18 @@ import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.Tran
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class DataDeserializer {
-    private final static String MOVEMENT_FILE_PATH = "src/main/resources/movement.json";
+    private final static String MOVEMENT_ZIP_FILE_PATH = "src/main/resources/movement.json.zip";
+    private final static String MOVEMENT_ZIP_ENTRY = "movement.json";
     private final static String TRANSPORTS_FILE_PATH = "src/main/resources/transports.json";
     private final static String SKRETZO_FILE_PATH = "src/main/resources/skretzo_data.txt";
 
@@ -24,8 +29,13 @@ public class DataDeserializer {
      * @throws IOException can't read file
      */
     public MovementJson deserializeMovementData() throws IOException {
-        try (BufferedReader jsonFile = Files.newBufferedReader(Path.of(MOVEMENT_FILE_PATH), StandardCharsets.UTF_8)) {
-            return new Gson().fromJson(jsonFile, MovementJson.class);
+        try (final ZipFile zipFile = new ZipFile(MOVEMENT_ZIP_FILE_PATH)) {
+            final ZipEntry zipFileEntry = zipFile.getEntry(MOVEMENT_ZIP_ENTRY);
+            assert (zipFileEntry != null);
+            try (final InputStream in = zipFile.getInputStream(zipFileEntry);
+                 final BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+                return new Gson().fromJson(reader, MovementJson.class);
+            }
         }
     }
 
