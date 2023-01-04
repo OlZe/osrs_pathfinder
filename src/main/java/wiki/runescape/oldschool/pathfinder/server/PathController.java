@@ -23,6 +23,10 @@ public class PathController {
 
     @PostMapping("path.json")
     public PathFinderResult getPath(@RequestBody FindPathRequest pathRequest) {
+        if(!this.graph.isWalkable(pathRequest.from()) || !this.graph.isWalkable(pathRequest.to())) {
+            return new PathFinderResult(false, null, 0);
+        }
+
         return this.pathFinder.findPath(this.graph, pathRequest.from(), pathRequest.to(), pathRequest.blacklist());
     }
 
