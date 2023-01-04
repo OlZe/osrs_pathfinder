@@ -21,7 +21,7 @@ public class PathController {
         this.pathFinder = new PathFinder();
     }
 
-    @PostMapping("path.json")
+    @PostMapping("api/path.json")
     public PathFinderResult getPath(@RequestBody FindPathRequest pathRequest) {
         if(!this.graph.isWalkable(pathRequest.from()) || !this.graph.isWalkable(pathRequest.to())) {
             return new PathFinderResult(false, null, 0);
@@ -30,7 +30,7 @@ public class PathController {
         return this.pathFinder.findPath(this.graph, pathRequest.from(), pathRequest.to(), pathRequest.blacklist());
     }
 
-    @GetMapping("/transports-teleports.json")
+    @GetMapping("api/transports-teleports.json")
     public Collection<String> getAllTransportsTeleports() {
         return this.graph.getAllTeleportsTransports();
     }
