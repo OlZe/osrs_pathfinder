@@ -32,29 +32,30 @@ public class GraphBuilder {
         final Logger logger = LoggerFactory.getLogger(GraphBuilder.class);
 
         // Deserialize Json
-        final Map<Coordinate, DataDeserializer.TileObstacles> tiles = new DataDeserializer().deserializeMovementData();
         logger.info("deserialize data");
+        final Map<Coordinate, DataDeserializer.TileObstacles> tiles = new DataDeserializer().deserializeMovementData();
 
         // Build walkable graph
-        final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
         logger.info("link walkable vertices");
+        final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
 
         // Deserialize transport Data
-        final TransportJson[] cooksTransportData = new DataDeserializer().deserializeTransportData();
         logger.info("deserialize cooks transport data");
+        final TransportJson[] cooksTransportData = new DataDeserializer().deserializeTransportData();
 
         // process transports
-        final Set<Teleport> teleports = this.addTransports(graphVertices, cooksTransportData);
         logger.info("process cooks transports");
+        final Set<Teleport> teleports = this.addTransports(graphVertices, cooksTransportData);
 
         // Deserialize Skretzo Data
-        final TransportJson[] skretzoTransports = new DataDeserializer().deserializeSkretzoData();
         logger.info("deserialize skretzo transport data");
+        final TransportJson[] skretzoTransports = new DataDeserializer().deserializeSkretzoData();
 
         // process skretzo transports
-        this.addTransports(graphVertices, skretzoTransports);
         logger.info("process skretzo transports");
+        this.addTransports(graphVertices, skretzoTransports);
 
+        logger.info("done");
         return new Graph(graphVertices, teleports);
     }
 
