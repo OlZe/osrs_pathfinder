@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.CoordinateJson;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.TransportJson;
 import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
-import wiki.runescape.oldschool.pathfinder.logic.GraphBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,14 +30,14 @@ public class DataDeserializer {
      * @return The content of "movement.csv" in an Object
      * @throws IOException can't read file
      */
-    public Map<Coordinate, GraphBuilder.TileObstacles> deserializeMovementData() throws IOException {
+    public Map<Coordinate, TileObstacles> deserializeMovementData() throws IOException {
         try (final ZipFile zipFile = new ZipFile(MOVEMENT_ZIP_FILE_PATH)) {
             final ZipEntry zipFileEntry = zipFile.getEntry(MOVEMENT_ZIP_ENTRY);
             assert (zipFileEntry != null);
             try (final InputStream in = zipFile.getInputStream(zipFileEntry);
                  final BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
-                final HashMap<Coordinate, GraphBuilder.TileObstacles> tiles = new HashMap<>();
+                final HashMap<Coordinate, TileObstacles> tiles = new HashMap<>();
                 reader.lines()
                         .filter(line -> !line.startsWith("#"))    // Filter comments
                         .map(line -> line.split(",")) // Separate comma values
@@ -48,7 +47,7 @@ public class DataDeserializer {
                                     Integer.parseInt(tileData[0]),
                                     Integer.parseInt(tileData[1]),
                                     Integer.parseInt(tileData[2]));
-                            final GraphBuilder.TileObstacles obstacles = new GraphBuilder.TileObstacles();
+                            final TileObstacles obstacles = new TileObstacles();
                             obstacles.northBlocked = Boolean.parseBoolean(tileData[3]);
                             obstacles.eastBlocked = Boolean.parseBoolean(tileData[4]);
                             obstacles.southBlocked = Boolean.parseBoolean(tileData[5]);
@@ -106,4 +105,10 @@ public class DataDeserializer {
     }
 
 
+    public static class TileObstacles {
+        public boolean northBlocked;
+        public boolean eastBlocked;
+        public boolean southBlocked;
+        public boolean westBlocked;
+    }
 }
