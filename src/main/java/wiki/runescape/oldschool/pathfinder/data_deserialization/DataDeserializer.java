@@ -2,8 +2,9 @@ package wiki.runescape.oldschool.pathfinder.data_deserialization;
 
 import com.google.gson.Gson;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.CoordinateJson;
-import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.MovementJson;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.TransportJson;
+import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
+import wiki.runescape.oldschool.pathfinder.logic.GraphBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,29 +13,49 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class DataDeserializer {
-    private final static String MOVEMENT_ZIP_FILE_PATH = "src/main/resources/movement.json.zip";
-    private final static String MOVEMENT_ZIP_ENTRY = "movement.json";
+    private final static String MOVEMENT_ZIP_FILE_PATH = "src/main/resources/movement.csv.zip";
+    private final static String MOVEMENT_ZIP_ENTRY = "movement.csv";
     private final static String TRANSPORTS_FILE_PATH = "src/main/resources/transports.json";
     private final static String SKRETZO_FILE_PATH = "src/main/resources/skretzo_data.txt";
 
     /**
-     * Reads the file "movement.json"
+     * Reads the file "movement.csv.zip"
      *
-     * @return The content of "movement.json" in an Object
+     * @return The content of "movement.csv" in an Object
      * @throws IOException can't read file
      */
-    public MovementJson deserializeMovementData() throws IOException {
+    public Map<Coordinate, GraphBuilder.TileObstacles> deserializeMovementData() throws IOException {
         try (final ZipFile zipFile = new ZipFile(MOVEMENT_ZIP_FILE_PATH)) {
             final ZipEntry zipFileEntry = zipFile.getEntry(MOVEMENT_ZIP_ENTRY);
             assert (zipFileEntry != null);
             try (final InputStream in = zipFile.getInputStream(zipFileEntry);
                  final BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-                return new Gson().fromJson(reader, MovementJson.class);
+
+                final HashMap<Coordinate, GraphBuilder.TileObstacles> tiles = new HashMap<>();
+                reader.lines()
+                        .filter(line -> !line.startsWith("#"))    // Filter comments
+                        .map(line -> line.split(",")) // Separate comma values
+                        .forEach(tileData -> {
+                            assert(tileData.length == 7);
+                            final Coordinate coordinate = new Coordinate(
+                                    Integer.parseInt(tileData[0]),
+                                    Integer.parseInt(tileData[1]),
+                                    Integer.parseInt(tileData[2]));
+                            final GraphBuilder.TileObstacles obstacles = new GraphBuilder.TileObstacles();
+                            obstacles.northBlocked = Boolean.parseBoolean(tileData[3]);
+                            obstacles.eastBlocked = Boolean.parseBoolean(tileData[4]);
+                            obstacles.southBlocked = Boolean.parseBoolean(tileData[5]);
+                            obstacles.westBlocked = Boolean.parseBoolean(tileData[6]);
+                            tiles.put(coordinate, obstacles);
+                        });
+                return tiles;
             }
         }
     }

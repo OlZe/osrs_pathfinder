@@ -2,8 +2,6 @@ package wiki.runescape.oldschool.pathfinder.logic;
 
 import wiki.runescape.oldschool.pathfinder.data_deserialization.DataDeserializer;
 import wiki.runescape.oldschool.pathfinder.TimeLogger;
-import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.CoordinateJson;
-import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.MovementJson;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.TransportJson;
 
 import java.io.IOException;
@@ -32,12 +30,8 @@ public class GraphBuilder {
         log.start("Graph Builder");
 
         // Deserialize Json
-        final MovementJson movementJson = new DataDeserializer().deserializeMovementData();
-        log.lap("deserialize movement data");
-
-        // Build Tile Map
-        final Map<Coordinate, TileObstacles> tiles = this.movementDataToMapOfTiles(movementJson);
-        log.lap("build tile map");
+        final Map<Coordinate, TileObstacles> tiles = new DataDeserializer().deserializeMovementData();
+        log.lap("deserialize data");
 
         // Build walkable graph
         final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
@@ -238,47 +232,9 @@ public class GraphBuilder {
     }
 
     /**
-     * Processes the rather stupidly made json format into a single data structure containing all Tile coordinates and Obstacles
-     *
-     * @param movementJson The populated Object representing movement.json
-     * @return A map where each coordinate has its own obstacle Data
-     */
-    private Map<Coordinate, TileObstacles> movementDataToMapOfTiles(MovementJson movementJson) {
-        HashMap<Coordinate, TileObstacles> tiles = new HashMap<>();
-
-        // Parse walkable json tiles
-        for (CoordinateJson tileJson : movementJson.walkable) {
-            final Coordinate coordinate = new Coordinate(tileJson.x, tileJson.y, tileJson.z);
-            final TileObstacles tile = new TileObstacles();
-            tiles.put(coordinate, tile);
-        }
-
-        // Parse obstacles
-        // obstacleValues[i] tells if there are obstacles on the tile with the relevant coordinate at obstaclePositions[i]
-        assert (movementJson.obstaclePositions.length == movementJson.obstacleValues.length);
-        for (int i = 0; i < movementJson.obstaclePositions.length; i++) {
-            final CoordinateJson obstacleCoordinateJson = movementJson.obstaclePositions[i];
-            final Coordinate obstacleCoordinate = new Coordinate(obstacleCoordinateJson.x, obstacleCoordinateJson.y, obstacleCoordinateJson.z);
-            final TileObstacles tile = tiles.get(obstacleCoordinate);
-
-            if (tile != null) {
-                final byte obstacleValueJson = movementJson.obstacleValues[i];
-                assert (obstacleValueJson >= 0);
-                assert (obstacleValueJson <= 15);
-                tile.northBlocked = (obstacleValueJson & 1) == 1;
-                tile.eastBlocked = (obstacleValueJson & 2) == 2;
-                tile.southBlocked = (obstacleValueJson & 4) == 4;
-                tile.westBlocked = (obstacleValueJson & 8) == 8;
-            }
-        }
-
-        return tiles;
-    }
-
-    /**
      * This class is only used to build the graph
      */
-    private static class TileObstacles {
+    public static class TileObstacles {
         public boolean northBlocked;
         public boolean eastBlocked;
         public boolean southBlocked;
