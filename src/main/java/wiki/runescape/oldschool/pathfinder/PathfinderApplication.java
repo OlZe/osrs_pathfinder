@@ -11,7 +11,7 @@ public class PathfinderApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(PathfinderApplication.class, args);
 		final Logger logger = LoggerFactory.getLogger(PathfinderApplication.class);
-		logger.info("Go to http://localhost:8080/frontend/index.html?m=-1&z=3&p=0&x=3229&y=3216  :)");
+		logger.info("Quick link http://localhost:8080/frontend/index.html?m=-1&z=3&p=0&x=3229&y=3216&layer=grid&layer=objects&layer=nomove :)");
 	}
 
 }

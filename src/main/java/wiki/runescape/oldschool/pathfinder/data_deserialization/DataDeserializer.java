@@ -104,7 +104,7 @@ public class DataDeserializer {
                 transport.start = startCoordinate;
                 transport.end = endCoordinate;
                 transport.title = methodOfMovement;
-                transport.duration = (byte) 1; // TODO Skretzo's data does not include duration
+                transport.duration = (byte) 1; // TODO Add duration data which is in parts[6]
                 return transport;
             });
             return transports.toArray(TransportJson[]::new);
