@@ -2260,14 +2260,14 @@
 # Shayzien
 1483 3549 0	1483 9951 3	Enter Crypt Entrance 32403					Has warning, at least without light source
 1483 9951 3	1483 3549 0	Climb-up Ladder 32401
-1561 3596 0	1561 3592 1	Climb Stairs 27201
-1561 3592 1	1561 3596 0	Climb Stairs 27202
-1562 3596 0	1562 3592 1	Climb Stairs 27201
-1562 3592 1	1562 3596 0	Climb Stairs 27202
-1579 3590 0	1579 3586 1	Climb Stairs 27201
-1579 3586 1	1579 3590 0	Climb Stairs 27202
-1580 3590 0	1580 3586 1	Climb Stairs 27201
-1580 3586 1	1580 3590 0	Climb Stairs 27202
+#1561 3596 0	1561 3592 1	Climb Stairs 27201
+#1561 3592 1	1561 3596 0	Climb Stairs 27202
+#1562 3596 0	1562 3592 1	Climb Stairs 27201
+#1562 3592 1	1562 3596 0	Climb Stairs 27202
+#1579 3590 0	1579 3586 1	Climb Stairs 27201
+#1579 3586 1	1579 3590 0	Climb Stairs 27202
+#1580 3590 0	1580 3586 1	Climb Stairs 27201
+#1580 3586 1	1580 3590 0	Climb Stairs 27202
 
 # Meyerditch
 3649 3220 0	3631 3219 0	Enter Door 32660			Darkness of Hallowvale (?)
@@ -3555,26 +3555,26 @@
 3314 2753 1	3314 2755 0	Climb-down Ladder 20354				2
 3315 2796 0	2800 5160 0	Climb-down Ladder 20275				2
 2799 5160 0	3315 2796 0	Climb-up Ladder 20277				2
-2800 5160 0	3318 9273 2	Climb-down Ladder 20278				2	Has warning
-3318 9273 2	2800 5160 0	Climb-up Ladder 20281				2
-3286 9275 2	3286 9273 0	Climb-down Ladder 20285				2
-3286 9273 0	3286 9275 2	Climb-up Ladder 20284				2
-3323 9240 0	3323 9242 2	Climb-up Ladder 20284				2
-3323 9242 2	3323 9240 0	Climb-down Ladder 20285				2
-3317 9251 0	3317 9249 2	Climb-up Ladder 20284				2
-3317 9249 2	3317 9251 0	Climb-down Ladder 20285				2
-3317 9223 0	3317 9225 2	Climb-up Ladder 20284				2
-3317 9225 2	3317 9223 0	Climb-down Ladder 20285				2
-3268 9228 2	3257 9226 0	Climb-down Ladder 20287				2
-3257 9226 0	3268 9228 2	Climb-up Ladder 20286				2
-3267 9220 2	3267 9222 0	Climb-down Ladder 20285				2
-3267 9222 0	3267 9220 2	Climb-up Ladder 20284				2
-3270 9274 2	3272 9274 0	Climb-down Ladder 20285				2
-3272 9274 0	3270 9274 2	Climb-up Ladder 20284				2
-3272 9235 2	3270 9235 0	Climb-down Ladder 20285				2
-3270 9235 0	3272 9235 2	Climb-up Ladder 20284				2
-3280 9254 0	3280 9256 2	Climb-up Ladder 20284				2
-3280 9256 2	3280 9254 0	Climb-down Ladder 20285				2
+#2800 5160 0	3318 9273 2	Climb-down Ladder 20278				2	Has warning
+#3318 9273 2	2800 5160 0	Climb-up Ladder 20281				2
+#3286 9275 2	3286 9273 0	Climb-down Ladder 20285				2
+#3286 9273 0	3286 9275 2	Climb-up Ladder 20284				2
+#3323 9240 0	3323 9242 2	Climb-up Ladder 20284				2
+#3323 9242 2	3323 9240 0	Climb-down Ladder 20285				2
+#3317 9251 0	3317 9249 2	Climb-up Ladder 20284				2
+#3317 9249 2	3317 9251 0	Climb-down Ladder 20285				2
+#3317 9223 0	3317 9225 2	Climb-up Ladder 20284				2
+#3317 9225 2	3317 9223 0	Climb-down Ladder 20285				2
+#3268 9228 2	3257 9226 0	Climb-down Ladder 20287				2
+#3257 9226 0	3268 9228 2	Climb-up Ladder 20286				2
+#3267 9220 2	3267 9222 0	Climb-down Ladder 20285				2
+#3267 9222 0	3267 9220 2	Climb-up Ladder 20284				2
+#3270 9274 2	3272 9274 0	Climb-down Ladder 20285				2
+#3272 9274 0	3270 9274 2	Climb-up Ladder 20284				2
+#3272 9235 2	3270 9235 0	Climb-down Ladder 20285				2
+#3270 9235 0	3272 9235 2	Climb-up Ladder 20284				2
+#3280 9254 0	3280 9256 2	Climb-up Ladder 20284				2
+#3280 9256 2	3280 9254 0	Climb-down Ladder 20285				2
 3307 2803 2	3309 2803 0	Climb-down Ladder 20357				2
 3309 2803 0	3307 2803 2	Climb-up Ladder 20356				2
 3283 2756 0	3283 2754 1	Climb-up Ladder 20353				2
