@@ -2,7 +2,7 @@ package wiki.runescape.oldschool.pathfinder.logic;
 
 import java.util.*;
 
-public record Graph(Map<Coordinate, GraphVertex> vertices, Set<Teleport> teleports) {
+public record Graph(Map<Coordinate, GraphVertex> vertices, Collection<Teleport> teleports) {
 
     /**
      * Empty for faster debugging because IntelliJ would try to represent this huge object as a string and slow down
@@ -26,7 +26,7 @@ public record Graph(Map<Coordinate, GraphVertex> vertices, Set<Teleport> telepor
                 .forEachOrdered(allTeleportsTransports::add);
 
         this.vertices.values().stream()
-                .flatMap(v -> v.neighbors.stream())
+                .flatMap(v -> v.neighbors().stream())
                 .map(GraphEdge::methodOfMovement)
                 .filter(t -> !t.contains("walk") && !t.equals("start"))
                 .distinct()

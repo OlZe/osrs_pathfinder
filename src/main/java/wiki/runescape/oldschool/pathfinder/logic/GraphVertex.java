@@ -1,21 +1,13 @@
 package wiki.runescape.oldschool.pathfinder.logic;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class GraphVertex {
-    public final List<GraphEdge> neighbors;
-    public final Coordinate coordinate;
-
-    public GraphVertex(Coordinate coordinate) {
-        this.coordinate = coordinate;
-        this.neighbors = new LinkedList<>();
-    }
+public record GraphVertex(Coordinate coordinate, List<GraphEdge> neighbors) {
 
     /**
      * Adds a unidirectional edge from this Vertex to the newNeighbour
-     *
      * @param newNeighbour The new neighbour
      */
     public void addEdgeTo(GraphVertex newNeighbour, byte cost, String methodOfMovement) {
@@ -43,5 +35,20 @@ public class GraphVertex {
                     default -> s;
                 }).collect(Collectors.joining(","));
         return "[" + this.coordinate.toString() + "->" + neighbours + "]";
+    }
+
+    // Override because default implementation checks if all neighbours, and their neighbours etc., are equal
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        final GraphVertex that = (GraphVertex) o;
+        return Objects.equals(coordinate, that.coordinate);
+    }
+
+    // Override because default implementation tries to hash all neighbours, and their neighbours etc.
+    @Override
+    public int hashCode() {
+        return Objects.hash(coordinate);
     }
 }

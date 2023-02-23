@@ -3,14 +3,11 @@ package wiki.runescape.oldschool.pathfinder.logic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.DataDeserializer;
-import wiki.runescape.oldschool.pathfinder.data_deserialization.jsonClasses.TransportJson;
 
 import java.io.IOException;
 import java.util.*;
 
 public class GraphBuilder {
-
-
     public static final String WALK_NORTH_WEST = "walk north west";
     public static final String WALK_SOUTH_EAST = "walk south east";
     public static final String WALK_SOUTH_WEST = "walk south west";
@@ -31,54 +28,43 @@ public class GraphBuilder {
     public Graph buildGraph() throws IOException {
         final Logger logger = LoggerFactory.getLogger(GraphBuilder.class);
 
-        // Deserialize Json
-        logger.info("deserialize data");
-        final Map<Coordinate, DataDeserializer.TileObstacles> tiles = new DataDeserializer().deserializeMovementData();
+        // Deserialize map data
+        logger.info("deserialize map data");
+        final DataDeserializer.MapData mapData = new DataDeserializer().deserializeMapData();
+        logger.info("Read " + mapData.walkableTiles().size() + " tiles");
+        logger.info("Read " + mapData.teleports().size() + " teleports");
+        logger.info("Read " + mapData.transports().size() + " transports");
 
         // Build walkable graph
-        logger.info("link walkable vertices");
-        final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(tiles);
+        logger.info("link vertices by walkability");
+        final Map<Coordinate, GraphVertex> graphVertices = this.mapOfTilesToWalkableGraph(mapData.walkableTiles());
 
-        // Deserialize transport Data
-        logger.info("deserialize cooks transport data");
-        final TransportJson[] cooksTransportData = new DataDeserializer().deserializeTransportData();
+        // Process transports
+        logger.info("link vertices by transports");
+        this.addTransports(graphVertices, mapData.transports());
 
-        // process transports
-        logger.info("process cooks transports");
-        final Set<Teleport> teleports = this.addTransports(graphVertices, cooksTransportData);
-
-        // Deserialize Skretzo Data
-        logger.info("deserialize skretzo transport data");
-        final TransportJson[] skretzoTransports = new DataDeserializer().deserializeSkretzoData();
-
-        // process skretzo transports
-        logger.info("process skretzo transports");
-        this.addTransports(graphVertices, skretzoTransports);
 
         logger.info("done");
-        return new Graph(graphVertices, teleports);
+        return new Graph(graphVertices, mapData.teleports());
     }
 
     /**
      * @param tileMap A Map of Tiles
      * @return A Graph linking all walkable tiles together
      */
-    private Map<Coordinate, GraphVertex> mapOfTilesToWalkableGraph(Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
+    private Map<Coordinate, GraphVertex> mapOfTilesToWalkableGraph(Map<Coordinate, DirectionalBlockers> tileMap) {
         Map<Coordinate, GraphVertex> graph = new HashMap<>();
 
         // Put tiles into graph
-        for (Map.Entry<Coordinate, DataDeserializer.TileObstacles> tile : tileMap.entrySet()) {
-            final Coordinate coordinate = tile.getKey();
-            final GraphVertex vertex = new GraphVertex(coordinate);
+        tileMap.forEach((coordinate, value) -> {
+            final GraphVertex vertex = new GraphVertex(coordinate, new LinkedList<>());
             graph.put(coordinate, vertex);
-        }
+        });
 
         // Pass 1
         // Link vertical/horizontal walking ways *first* so they get prioritized when pathfinding
-        // This is important to avoid zig-zag paths which are the same length but not user friendly
-        // Link north and east neighbours
-        for(Map.Entry<Coordinate, DataDeserializer.TileObstacles> tile : tileMap.entrySet()) {
-            final Coordinate coordinate = tile.getKey();
+        // This is important to avoid zigzag paths which are the same length but not user-friendly
+        tileMap.forEach((coordinate, value) -> {
             final GraphVertex vertex = graph.get(coordinate);
 
             // North
@@ -94,13 +80,11 @@ public class GraphBuilder {
                 vertex.addEdgeTo(eastVertex, (byte) 1, WALK_EAST);
                 eastVertex.addEdgeTo(vertex, (byte) 1, WALK_WEST);
             }
-        }
+        });
 
         // Pass 2
         // Link diagonal paths
-        // Link north east and south east neighbours
-        for (Map.Entry<Coordinate, DataDeserializer.TileObstacles> tile : tileMap.entrySet()) {
-            final Coordinate coordinate = tile.getKey();
+        tileMap.forEach((coordinate, value) -> {
             final GraphVertex vertex = graph.get(coordinate);
 
             // North East
@@ -116,117 +100,88 @@ public class GraphBuilder {
                 vertex.addEdgeTo(southEastVertex, (byte) 1, WALK_SOUTH_EAST);
                 southEastVertex.addEdgeTo(vertex, (byte) 1, WALK_NORTH_WEST);
             }
-        }
+        });
 
         return graph;
     }
 
     /**
-     * links vertices according to point-to-point transports (fairy rings etc.).
-     * Returns a Set of Teleports
+     * links vertices according to point-to-point transports.
      *
      * @param graph      The vertices of which just walkable ones have been linked
      * @param transports The deserialized transport data
      */
-    private Set<Teleport> addTransports(Map<Coordinate, GraphVertex> graph, TransportJson[] transports) {
-        final Set<Teleport> teleports = new HashSet<>();
-        for (TransportJson transport : transports) {
-            assert (transport.end != null);
+    private void addTransports(Map<Coordinate, GraphVertex> graph, Collection<Transport> transports) {
+        transports.forEach(transport -> {
+            final GraphVertex fromVertex = graph.get(transport.from());
+            final GraphVertex toVertex = graph.get(transport.to());
 
-            if (transport.start == null) {
-                addTeleportIfExists(graph, teleports, transport);
-            } else {
-                linkVerticesIfExists(graph, transport);
+            if (fromVertex == null || toVertex == null) {
+                this.logger.warn("Vertices for Transport '" + transport.title() + "' from " + transport.from() + " to " + transport.to() + " are not in graph.");
+                return;
             }
-        }
-        return teleports;
+
+            // Duplicate edge detection
+            final Optional<GraphEdge> duplicateEdge = fromVertex.neighbors().stream()
+                    .filter(edge -> edge.to().coordinate().equals(toVertex.coordinate()))
+                    .findAny();
+
+            if (duplicateEdge.isPresent()) {
+                this.logger.warn("Duplicate edge " + fromVertex.coordinate() + "->" + toVertex.coordinate() + ": "
+                        + "Existing edge: '" + duplicateEdge.get().methodOfMovement() + "' cost " + duplicateEdge.get().cost() + "; "
+                        + "Ignoring new edge: '" + transport.title() + "' cost " + transport.duration() + ".");
+                return;
+            }
+            fromVertex.addEdgeTo(toVertex, transport.duration(), transport.title());
+        });
     }
 
-    private void addTeleportIfExists(final Map<Coordinate, GraphVertex> graph,
-                                            final Set<Teleport> teleports, final TransportJson transport) {
-        final Coordinate tpDest = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
-        final GraphVertex tpDestVertex = graph.get(tpDest);
-        if (tpDestVertex == null) {
-            this.logger.warn("Vertex " + tpDest + " for Teleport '" + transport.title + "' is not in graph.");
-            return;
-        }
-        teleports.add(new Teleport(tpDestVertex, transport.title, transport.duration));
+    private boolean canMoveNorth(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
+        final DirectionalBlockers northTileObstacles = tileMap.get(coordinate.moveNorth());
+        final DirectionalBlockers originTileObstacles = tileMap.get(coordinate);
+        return northTileObstacles != null && !originTileObstacles.northBlocked() && !northTileObstacles.southBlocked();
     }
 
-    /**
-     * Adds an edge in the graph according to the given transport
-     * Does not add duplicate edges
-     *
-     * @param graph The graph
-     * @param transport The transportJson
-     */
-    private void linkVerticesIfExists(final Map<Coordinate, GraphVertex> graph, final TransportJson transport) {
-        final Coordinate startCoord = new Coordinate(transport.start.x, transport.start.y, transport.start.z);
-        final Coordinate endCoord = new Coordinate(transport.end.x, transport.end.y, transport.end.z);
-        final GraphVertex startVertex = graph.get(startCoord);
-        final GraphVertex endVertex = graph.get(endCoord);
-
-        if (startVertex == null || endVertex == null) {
-            this.logger.warn("Vertices for Transport '" + transport.title + "' from " + transport.start + " to " + transport.end + " are not in graph.");
-            return;
-        }
-
-        final Optional<GraphEdge> existingEdge = startVertex.neighbors.stream().filter(e -> e.to().coordinate.equals(endCoord)).findAny();
-        if (existingEdge.isPresent()) {
-            this.logger.warn("Duplicate edge " + startCoord + "->" + endCoord + ": "
-                    + "Existing edge: '" + existingEdge.get().methodOfMovement() + "' cost " + existingEdge.get().cost() + "; "
-                    + "Ignoring new edge: '" + transport.title + "' cost " + transport.duration + ".");
-            return;
-        }
-        startVertex.addEdgeTo(endVertex, transport.duration, transport.title);
+    private boolean canMoveEast(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
+        final DirectionalBlockers eastTileObstacles = tileMap.get(coordinate.moveEast());
+        final DirectionalBlockers originTileObstacles = tileMap.get(coordinate);
+        return eastTileObstacles != null && !originTileObstacles.eastBlocked() && !eastTileObstacles.westBlocked();
     }
 
-    private boolean canMoveNorth(Coordinate coordinate, Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
-        final DataDeserializer.TileObstacles northTileObstacles = tileMap.get(coordinate.moveNorth());
-        final DataDeserializer.TileObstacles originTileObstacles = tileMap.get(coordinate);
-        return northTileObstacles != null && !originTileObstacles.northBlocked && !northTileObstacles.southBlocked;
+    private boolean canMoveSouth(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
+        final DirectionalBlockers southTileObstacles = tileMap.get(coordinate.moveSouth());
+        final DirectionalBlockers originTileObstacles = tileMap.get(coordinate);
+        return southTileObstacles != null && !originTileObstacles.southBlocked() && !southTileObstacles.northBlocked();
     }
 
-    private boolean canMoveEast(Coordinate coordinate, Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
-        final DataDeserializer.TileObstacles eastTileObstacles = tileMap.get(coordinate.moveEast());
-        final DataDeserializer.TileObstacles originTileObstacles = tileMap.get(coordinate);
-        return eastTileObstacles != null && !originTileObstacles.eastBlocked && !eastTileObstacles.westBlocked;
+    private boolean canMoveWest(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
+        final DirectionalBlockers westTileObstacles = tileMap.get(coordinate.moveWest());
+        final DirectionalBlockers originTileObstacles = tileMap.get(coordinate);
+        return westTileObstacles != null && !originTileObstacles.westBlocked() && !westTileObstacles.eastBlocked();
     }
 
-    private boolean canMoveSouth(Coordinate coordinate, Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
-        final DataDeserializer.TileObstacles southTileObstacles = tileMap.get(coordinate.moveSouth());
-        final DataDeserializer.TileObstacles originTileObstacles = tileMap.get(coordinate);
-        return southTileObstacles != null && !originTileObstacles.southBlocked && !southTileObstacles.northBlocked;
-    }
-
-    private boolean canMoveWest(Coordinate coordinate, Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
-        final DataDeserializer.TileObstacles westTileObstacles = tileMap.get(coordinate.moveWest());
-        final DataDeserializer.TileObstacles originTileObstacles = tileMap.get(coordinate);
-        return westTileObstacles != null && !originTileObstacles.westBlocked && !westTileObstacles.eastBlocked;
-    }
-
-    private boolean canMoveNorthEast(Coordinate coordinate, Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
+    private boolean canMoveNorthEast(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
         return this.canMoveEast(coordinate, tileMap) &&
                 this.canMoveNorth(coordinate.moveEast(), tileMap) &&
                 this.canMoveNorth(coordinate, tileMap) &&
                 this.canMoveEast(coordinate.moveNorth(), tileMap);
     }
 
-    private boolean canMoveSouthEast(Coordinate coordinate, Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
+    private boolean canMoveSouthEast(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
         return this.canMoveEast(coordinate, tileMap) &&
                 this.canMoveSouth(coordinate.moveEast(), tileMap) &&
                 this.canMoveSouth(coordinate, tileMap) &&
                 this.canMoveEast(coordinate.moveSouth(), tileMap);
     }
 
-    private boolean canMoveSouthWest(Coordinate coordinate, Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
+    private boolean canMoveSouthWest(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
         return this.canMoveWest(coordinate, tileMap) &&
                 this.canMoveSouth(coordinate.moveWest(), tileMap) &&
                 this.canMoveSouth(coordinate, tileMap) &&
                 this.canMoveWest(coordinate.moveSouth(), tileMap);
     }
 
-    private boolean canMoveNorthWest(Coordinate coordinate, Map<Coordinate, DataDeserializer.TileObstacles> tileMap) {
+    private boolean canMoveNorthWest(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
         return this.canMoveWest(coordinate, tileMap) &&
                 this.canMoveNorth(coordinate.moveWest(), tileMap) &&
                 this.canMoveNorth(coordinate, tileMap) &&

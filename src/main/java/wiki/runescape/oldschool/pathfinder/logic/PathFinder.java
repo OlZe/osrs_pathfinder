@@ -1,6 +1,9 @@
 package wiki.runescape.oldschool.pathfinder.logic;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 public class PathFinder {
 
@@ -17,12 +20,12 @@ public class PathFinder {
         final DijkstraQueueEntry firstDijkstraQueueEntry = new DijkstraQueueEntry(startVertex, null, "start", 0);
 
         // start == end, return
-        if(start.equals(end)) {
+        if (start.equals(end)) {
             return new PathFinderResult(true, this.backtrack(firstDijkstraQueueEntry), System.currentTimeMillis() - startTime);
         }
 
         // Add neighbours of starting position to queue
-        startVertex.neighbors.stream()
+        startVertex.neighbors().stream()
                 .filter(neighbor -> !blacklist.contains(neighbor.methodOfMovement()))
                 .map(neighbor -> new DijkstraQueueEntry(neighbor.to(), firstDijkstraQueueEntry, neighbor.methodOfMovement(), neighbor.cost()))
                 .forEachOrdered(queue::add);
@@ -30,7 +33,7 @@ public class PathFinder {
         // Add teleports to queue
         graph.teleports().stream()
                 .filter(tp -> !blacklist.contains(tp.title()))
-                .map(tp -> new DijkstraQueueEntry(tp.destination(), firstDijkstraQueueEntry, tp.title(), tp.duration()))
+                .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), firstDijkstraQueueEntry, tp.title(), tp.duration()))
                 .forEachOrdered(queue::add);
 
 
@@ -38,17 +41,17 @@ public class PathFinder {
 
             // Expand next vertex if new
             final DijkstraQueueEntry current = queue.remove();
-            final GraphVertex currentVertex = current.vertex;
+            final GraphVertex currentVertex = current.vertex();
             if (!expandedVertices.contains(currentVertex)) {
                 expandedVertices.add(currentVertex);
 
                 // Goal found?
-                if (currentVertex.coordinate.equals(end)) {
+                if (currentVertex.coordinate().equals(end)) {
                     return new PathFinderResult(true, this.backtrack(current), System.currentTimeMillis() - startTime);
                 }
 
                 // Add neighbours of vertex into queue
-                currentVertex.neighbors.stream()
+                currentVertex.neighbors().stream()
                         .filter(neighbor -> !blacklist.contains(neighbor.methodOfMovement()))
                         .map(n -> new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), (current.totalCost()) + n.cost()))
                         .forEachOrdered(queue::add);
@@ -70,18 +73,22 @@ public class PathFinder {
 
         DijkstraQueueEntry current = goal;
         while (current.hasPrevious()) {
-            path.add(0, new PathFinderResult.Movement(current.vertex.coordinate, current.methodOfMovement));
-            current = current.previous;
+            path.add(0, new PathFinderResult.Movement(current.vertex().coordinate(), current.methodOfMovement()));
+            current = current.previous();
         }
 
         // Reached the start
-        path.add(0, new PathFinderResult.Movement(current.vertex.coordinate, current.methodOfMovement));
+        path.add(0, new PathFinderResult.Movement(current.vertex().coordinate(), current.methodOfMovement()));
 
         return path;
     }
 
+    private record DijkstraQueueEntry(
+            GraphVertex vertex,
+            DijkstraQueueEntry previous,
+            String methodOfMovement,
+            int totalCost)
 
-    private record DijkstraQueueEntry(GraphVertex vertex, DijkstraQueueEntry previous, String methodOfMovement, int totalCost)
             implements Comparable<DijkstraQueueEntry> {
 
         public boolean hasPrevious() {
@@ -94,3 +101,4 @@ public class PathFinder {
         }
     }
 }
+
