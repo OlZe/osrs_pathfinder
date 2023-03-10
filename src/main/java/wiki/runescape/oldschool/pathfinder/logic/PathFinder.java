@@ -11,8 +11,8 @@ public class PathFinder {
     public PathFinderResult findPath(Graph graph, Coordinate start, Coordinate end, Set<String> blacklist) {
         final long startTime = System.currentTimeMillis();
 
-        final PriorityQueueTieByTime<DijkstraQueueEntry> queue = new PriorityQueueTieByTime<>();
-        final Set<GraphVertex> expandedVertices = new HashSet<>();
+        final PriorityQueueTieByTime<DijkstraQueueEntry> open_list = new PriorityQueueTieByTime<>();
+        final Set<Coordinate> closed_list = new HashSet<>();
 
         // Determine starting position
         final GraphVertex startVertex = graph.vertices().get(start);
@@ -24,38 +24,38 @@ public class PathFinder {
             return new PathFinderResult(true, this.backtrack(firstDijkstraQueueEntry), System.currentTimeMillis() - startTime);
         }
 
-        // Add neighbours of starting position to queue
-        startVertex.neighbors().stream()
-                .filter(neighbor -> !blacklist.contains(neighbor.methodOfMovement()))
-                .map(neighbor -> new DijkstraQueueEntry(neighbor.to(), firstDijkstraQueueEntry, neighbor.methodOfMovement(), neighbor.cost()))
-                .forEachOrdered(queue::add);
+        // Add start to open_list
+        open_list.add(firstDijkstraQueueEntry);
+        closed_list.add(firstDijkstraQueueEntry.vertex.coordinate());
 
-        // Add teleports to queue
+        // Add teleports to open_list
         graph.teleports().stream()
-                .filter(tp -> !blacklist.contains(tp.title()))
                 .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), firstDijkstraQueueEntry, tp.title(), tp.duration()))
-                .forEachOrdered(queue::add);
+                .filter(entry -> entry.vertex() != null)
+                .filter(entry -> !blacklist.contains(entry.methodOfMovement))
+                .filter(entry -> !closed_list.contains(entry.vertex.coordinate()))
+                .forEachOrdered(entry -> {
+                    open_list.add(entry);
+                    closed_list.add(entry.vertex().coordinate());
+                });
 
+        while (open_list.peek() != null) {
+            final DijkstraQueueEntry current = open_list.remove();
 
-        while (queue.peek() != null) {
-
-            // Expand next vertex if new
-            final DijkstraQueueEntry current = queue.remove();
-            final GraphVertex currentVertex = current.vertex();
-            if (!expandedVertices.contains(currentVertex)) {
-                expandedVertices.add(currentVertex);
-
-                // Goal found?
-                if (currentVertex.coordinate().equals(end)) {
-                    return new PathFinderResult(true, this.backtrack(current), System.currentTimeMillis() - startTime);
-                }
-
-                // Add neighbours of vertex into queue
-                currentVertex.neighbors().stream()
-                        .filter(neighbor -> !blacklist.contains(neighbor.methodOfMovement()))
-                        .map(n -> new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), (current.totalCost()) + n.cost()))
-                        .forEachOrdered(queue::add);
+            // Goal found?
+            if (current.vertex().coordinate().equals(end)) {
+                return new PathFinderResult(true, this.backtrack(current), System.currentTimeMillis() - startTime);
             }
+
+            // Add neighbours of vertex into open_list if not in closed_list
+            current.vertex().neighbors().stream()
+                    .map(n -> new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), (current.totalCost()) + n.cost()))
+                    .filter(entry -> !blacklist.contains(entry.methodOfMovement()))
+                    .filter(entry -> !closed_list.contains(entry.vertex().coordinate()))
+                    .forEachOrdered(entry -> {
+                        open_list.add(entry);
+                        closed_list.add(entry.vertex().coordinate());
+                    });
         }
 
         return new PathFinderResult(false, null, System.currentTimeMillis() - startTime);
@@ -101,4 +101,3 @@ public class PathFinder {
         }
     }
 }
-
