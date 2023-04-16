@@ -1,7 +1,7 @@
 package wiki.runescape.oldschool.pathfinder.data_deserialization;
 
 import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
-import wiki.runescape.oldschool.pathfinder.logic.DirectionalBlockers;
+import wiki.runescape.oldschool.pathfinder.logic.PositionInfo;
 import wiki.runescape.oldschool.pathfinder.logic.Teleport;
 import wiki.runescape.oldschool.pathfinder.logic.Transport;
 
@@ -28,7 +28,7 @@ public class DataDeserializer {
             final ZipInputStream zipIn = new ZipInputStream(mapDataInStream);
             final BufferedReader reader = new BufferedReader(new InputStreamReader(zipIn));
 
-            Map<Coordinate, DirectionalBlockers> walkableTiles = null;
+            Map<Coordinate, PositionInfo> walkableTiles = null;
             Collection<Teleport> teleports = null;
             Collection<Transport> transports = null;
 
@@ -50,30 +50,38 @@ public class DataDeserializer {
             }
 
             return new MapData(walkableTiles, teleports, transports);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new IOException("An error occurred reading the map data " + MAP_DATA_ARCHIVE_FILE, e);
         }
     }
 
-    private Map<Coordinate, DirectionalBlockers> readMovementData(BufferedReader movementDataStream) {
-        final HashMap<Coordinate, DirectionalBlockers> tiles = new HashMap<>();
+    private Map<Coordinate, PositionInfo> readMovementData(BufferedReader movementDataStream) {
+        final HashMap<Coordinate, PositionInfo> tiles = new HashMap<>();
         movementDataStream.lines()
                 .filter(line -> !line.startsWith("#"))    // Filter comments
                 .map(line -> line.split(",")) // Separate comma values
-                .forEachOrdered(tileData -> {
-                    assert (tileData.length == 7);
+                .forEachOrdered(positionData -> {
+                    assert (positionData.length == 8);
                     final Coordinate coordinate = new Coordinate(
-                            Integer.parseInt(tileData[0]),
-                            Integer.parseInt(tileData[1]),
-                            Integer.parseInt(tileData[2]));
-                    final DirectionalBlockers obstacles = new DirectionalBlockers(
-                            Boolean.parseBoolean(tileData[3]),
-                            Boolean.parseBoolean(tileData[4]),
-                            Boolean.parseBoolean(tileData[5]),
-                            Boolean.parseBoolean(tileData[6])
+                            Integer.parseInt(positionData[0]),
+                            Integer.parseInt(positionData[1]),
+                            Integer.parseInt(positionData[2]));
+                    final PositionInfo.WildernessLevels wildernessLevel = switch (Integer.parseInt(positionData[7])) {
+                        case 0 -> PositionInfo.WildernessLevels.BELOW20;
+                        case 1 -> PositionInfo.WildernessLevels.BETWEEN20AND30;
+                        case 2 -> PositionInfo.WildernessLevels.ABOVE30;
+                        default ->
+                                throw new IllegalStateException("Error reading Wilderness Level: " + Integer.parseInt(positionData[7]));
+                    };
+                    final PositionInfo posInfo = new PositionInfo(
+                            coordinate,
+                            Boolean.parseBoolean(positionData[3]),
+                            Boolean.parseBoolean(positionData[4]),
+                            Boolean.parseBoolean(positionData[5]),
+                            Boolean.parseBoolean(positionData[6]),
+                            wildernessLevel
                     );
-                    tiles.put(coordinate, obstacles);
+                    tiles.put(coordinate, posInfo);
                 });
         return tiles;
     }
@@ -120,7 +128,7 @@ public class DataDeserializer {
     }
 
     public record MapData(
-            Map<Coordinate, DirectionalBlockers> walkableTiles,
+            Map<Coordinate, PositionInfo> walkableTiles,
             Collection<Teleport> teleports,
             Collection<Transport> transports) {
     }

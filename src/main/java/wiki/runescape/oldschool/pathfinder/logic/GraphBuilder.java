@@ -52,12 +52,12 @@ public class GraphBuilder {
      * @param tileMap A Map of Tiles
      * @return A Graph linking all walkable tiles together
      */
-    private Map<Coordinate, GraphVertex> mapOfTilesToWalkableGraph(Map<Coordinate, DirectionalBlockers> tileMap) {
+    private Map<Coordinate, GraphVertex> mapOfTilesToWalkableGraph(Map<Coordinate, PositionInfo> tileMap) {
         Map<Coordinate, GraphVertex> graph = new HashMap<>();
 
         // Put tiles into graph
         tileMap.forEach((coordinate, value) -> {
-            final GraphVertex vertex = new GraphVertex(coordinate, new LinkedList<>());
+            final GraphVertex vertex = new GraphVertex(coordinate, new LinkedList<>(), value.wildernessLevel());
             graph.put(coordinate, vertex);
         });
 
@@ -136,52 +136,52 @@ public class GraphBuilder {
         });
     }
 
-    private boolean canMoveNorth(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
-        final DirectionalBlockers northTileObstacles = tileMap.get(coordinate.moveNorth());
-        final DirectionalBlockers originTileObstacles = tileMap.get(coordinate);
+    private boolean canMoveNorth(Coordinate coordinate, Map<Coordinate, PositionInfo> tileMap) {
+        final PositionInfo northTileObstacles = tileMap.get(coordinate.moveNorth());
+        final PositionInfo originTileObstacles = tileMap.get(coordinate);
         return northTileObstacles != null && !originTileObstacles.northBlocked() && !northTileObstacles.southBlocked();
     }
 
-    private boolean canMoveEast(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
-        final DirectionalBlockers eastTileObstacles = tileMap.get(coordinate.moveEast());
-        final DirectionalBlockers originTileObstacles = tileMap.get(coordinate);
+    private boolean canMoveEast(Coordinate coordinate, Map<Coordinate, PositionInfo> tileMap) {
+        final PositionInfo eastTileObstacles = tileMap.get(coordinate.moveEast());
+        final PositionInfo originTileObstacles = tileMap.get(coordinate);
         return eastTileObstacles != null && !originTileObstacles.eastBlocked() && !eastTileObstacles.westBlocked();
     }
 
-    private boolean canMoveSouth(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
-        final DirectionalBlockers southTileObstacles = tileMap.get(coordinate.moveSouth());
-        final DirectionalBlockers originTileObstacles = tileMap.get(coordinate);
+    private boolean canMoveSouth(Coordinate coordinate, Map<Coordinate, PositionInfo> tileMap) {
+        final PositionInfo southTileObstacles = tileMap.get(coordinate.moveSouth());
+        final PositionInfo originTileObstacles = tileMap.get(coordinate);
         return southTileObstacles != null && !originTileObstacles.southBlocked() && !southTileObstacles.northBlocked();
     }
 
-    private boolean canMoveWest(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
-        final DirectionalBlockers westTileObstacles = tileMap.get(coordinate.moveWest());
-        final DirectionalBlockers originTileObstacles = tileMap.get(coordinate);
+    private boolean canMoveWest(Coordinate coordinate, Map<Coordinate, PositionInfo> tileMap) {
+        final PositionInfo westTileObstacles = tileMap.get(coordinate.moveWest());
+        final PositionInfo originTileObstacles = tileMap.get(coordinate);
         return westTileObstacles != null && !originTileObstacles.westBlocked() && !westTileObstacles.eastBlocked();
     }
 
-    private boolean canMoveNorthEast(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
+    private boolean canMoveNorthEast(Coordinate coordinate, Map<Coordinate, PositionInfo> tileMap) {
         return this.canMoveEast(coordinate, tileMap) &&
                 this.canMoveNorth(coordinate.moveEast(), tileMap) &&
                 this.canMoveNorth(coordinate, tileMap) &&
                 this.canMoveEast(coordinate.moveNorth(), tileMap);
     }
 
-    private boolean canMoveSouthEast(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
+    private boolean canMoveSouthEast(Coordinate coordinate, Map<Coordinate, PositionInfo> tileMap) {
         return this.canMoveEast(coordinate, tileMap) &&
                 this.canMoveSouth(coordinate.moveEast(), tileMap) &&
                 this.canMoveSouth(coordinate, tileMap) &&
                 this.canMoveEast(coordinate.moveSouth(), tileMap);
     }
 
-    private boolean canMoveSouthWest(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
+    private boolean canMoveSouthWest(Coordinate coordinate, Map<Coordinate, PositionInfo> tileMap) {
         return this.canMoveWest(coordinate, tileMap) &&
                 this.canMoveSouth(coordinate.moveWest(), tileMap) &&
                 this.canMoveSouth(coordinate, tileMap) &&
                 this.canMoveWest(coordinate.moveSouth(), tileMap);
     }
 
-    private boolean canMoveNorthWest(Coordinate coordinate, Map<Coordinate, DirectionalBlockers> tileMap) {
+    private boolean canMoveNorthWest(Coordinate coordinate, Map<Coordinate, PositionInfo> tileMap) {
         return this.canMoveWest(coordinate, tileMap) &&
                 this.canMoveNorth(coordinate.moveWest(), tileMap) &&
                 this.canMoveNorth(coordinate, tileMap) &&

@@ -28,19 +28,24 @@ public class PathFinder {
         open_list.add(firstDijkstraQueueEntry);
         closed_list.add(firstDijkstraQueueEntry.vertex.coordinate());
 
-        // Add teleports to open_list
-        graph.teleports().stream()
-                .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), firstDijkstraQueueEntry, tp.title(), tp.duration()))
-                .filter(entry -> entry.vertex() != null)
-                .filter(entry -> !blacklist.contains(entry.methodOfMovement))
-                .filter(entry -> !closed_list.contains(entry.vertex.coordinate()))
-                .forEachOrdered(entry -> {
-                    open_list.add(entry);
-                    closed_list.add(entry.vertex().coordinate());
-                });
 
+        boolean addedTeleports = false;
         while (open_list.peek() != null) {
             final DijkstraQueueEntry current = open_list.remove();
+
+            if(!addedTeleports && current.vertex.wildernessLevel().equals(PositionInfo.WildernessLevels.BELOW20)) {
+                // Add teleports to open_list
+                graph.teleports().stream()
+                        .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), tp.duration()))
+                        .filter(entry -> entry.vertex() != null)
+                        .filter(entry -> !blacklist.contains(entry.methodOfMovement))
+                        .filter(entry -> !closed_list.contains(entry.vertex.coordinate()))
+                        .forEachOrdered(entry -> {
+                            open_list.add(entry);
+                            closed_list.add(entry.vertex().coordinate());
+                        });
+                addedTeleports = true;
+            }
 
             // Goal found?
             if (current.vertex().coordinate().equals(end)) {
