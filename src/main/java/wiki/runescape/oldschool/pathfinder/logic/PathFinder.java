@@ -19,7 +19,7 @@ public class PathFinder {
         assert (startVertex != null);
         final DijkstraQueueEntry firstDijkstraQueueEntry = new DijkstraQueueEntry(startVertex, null, "start", 0);
 
-        // start == end, return
+        // if start == end, return
         if (start.equals(end)) {
             return new PathFinderResult(true, this.backtrack(firstDijkstraQueueEntry), System.currentTimeMillis() - startTime);
         }
@@ -29,30 +29,17 @@ public class PathFinder {
         closed_list.add(firstDijkstraQueueEntry.vertex.coordinate());
 
 
-        boolean addedTeleports = false;
+        boolean addedTeleportsUpTo30Wildy = false;
+        boolean addedTeleportsUpTo20Wildy = false;
         while (open_list.peek() != null) {
             final DijkstraQueueEntry current = open_list.remove();
-
-            if(!addedTeleports && current.vertex.wildernessLevel().equals(PositionInfo.WildernessLevels.BELOW20)) {
-                // Add teleports to open_list
-                graph.teleports().stream()
-                        .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), tp.duration()))
-                        .filter(entry -> entry.vertex() != null)
-                        .filter(entry -> !blacklist.contains(entry.methodOfMovement))
-                        .filter(entry -> !closed_list.contains(entry.vertex.coordinate()))
-                        .forEachOrdered(entry -> {
-                            open_list.add(entry);
-                            closed_list.add(entry.vertex().coordinate());
-                        });
-                addedTeleports = true;
-            }
 
             // Goal found?
             if (current.vertex().coordinate().equals(end)) {
                 return new PathFinderResult(true, this.backtrack(current), System.currentTimeMillis() - startTime);
             }
 
-            // Add neighbours of vertex into open_list if not in closed_list
+            // Add neighbours of vertex to open_list
             current.vertex().neighbors().stream()
                     .map(n -> new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), (current.totalCost()) + n.cost()))
                     .filter(entry -> !blacklist.contains(entry.methodOfMovement()))
@@ -61,8 +48,42 @@ public class PathFinder {
                         open_list.add(entry);
                         closed_list.add(entry.vertex().coordinate());
                     });
+
+            // If teleports haven't been added, add them to open_list, depending on wildy level
+            // Teleports up to lvl 30
+            final boolean addTeleportsUpTo30Wildy = !addedTeleportsUpTo30Wildy && !(current.vertex.wildernessLevel().equals(PositionInfo.WildernessLevels.ABOVE30));
+            if (addTeleportsUpTo30Wildy) {
+                graph.teleports().stream()
+                        .filter(Teleport::canTeleportUpTo30Wildy)
+                        .filter(tp -> graph.vertices().containsKey(tp.destination()))
+                        .filter(tp -> !blacklist.contains(tp.title()))
+                        .filter(tp -> !closed_list.contains(tp.destination()))
+                        .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), tp.duration()))
+                        .forEachOrdered(entry -> {
+                            open_list.add(entry);
+                            closed_list.add(entry.vertex().coordinate());
+                        });
+                addedTeleportsUpTo30Wildy = true;
+            }
+
+            // Teleports up to lvl 20
+            final boolean addTeleportsUpTo20Wildy = !addedTeleportsUpTo20Wildy && current.vertex.wildernessLevel().equals(PositionInfo.WildernessLevels.BELOW20);
+            if (addTeleportsUpTo20Wildy) {
+                graph.teleports().stream()
+                        .filter(tp -> !tp.canTeleportUpTo30Wildy())
+                        .filter(tp -> graph.vertices().containsKey(tp.destination()))
+                        .filter(tp -> !blacklist.contains(tp.title()))
+                        .filter(tp -> !closed_list.contains(tp.destination()))
+                        .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), tp.duration()))
+                        .forEachOrdered(entry -> {
+                            open_list.add(entry);
+                            closed_list.add(entry.vertex().coordinate());
+                        });
+                addedTeleportsUpTo20Wildy = true;
+            }
         }
 
+        // No Path found
         return new PathFinderResult(false, null, System.currentTimeMillis() - startTime);
     }
 

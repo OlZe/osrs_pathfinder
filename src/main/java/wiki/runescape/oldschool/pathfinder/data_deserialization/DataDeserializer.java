@@ -114,7 +114,7 @@ public class DataDeserializer {
                 .filter(line -> !(line.startsWith("#") || line.isEmpty()))
                 .map(line -> {
                     final String[] parts = line.split(",");
-                    assert parts.length == 5;
+                    assert parts.length == 6;
                     final Coordinate to = new Coordinate(
                             Integer.parseInt(parts[0]),
                             Integer.parseInt(parts[1]),
@@ -122,7 +122,8 @@ public class DataDeserializer {
                     return new Teleport(
                             to,
                             parts[4],
-                            Byte.parseByte(parts[3]));
+                            Byte.parseByte(parts[3]),
+                            Boolean.parseBoolean(parts[5]));
                 })
                 .collect(Collectors.toList());
     }
