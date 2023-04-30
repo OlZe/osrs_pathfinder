@@ -11,9 +11,6 @@ public class PathFinder {
     public PathFinderResult findPath(Graph graph, Coordinate start, Coordinate end, Set<String> blacklist) {
         final long startTime = System.currentTimeMillis();
 
-        final PriorityQueueTieByTime<DijkstraQueueEntry> open_list = new PriorityQueueTieByTime<>();
-        final Set<Coordinate> closed_list = new HashSet<>();
-
         // Determine starting position
         final GraphVertex startVertex = graph.vertices().get(start);
         assert (startVertex != null);
@@ -24,15 +21,20 @@ public class PathFinder {
             return new PathFinderResult(true, this.backtrack(firstDijkstraQueueEntry), System.currentTimeMillis() - startTime);
         }
 
-        // Add start to open_list
+        // Init open_list and closed_list
+        final Set<Coordinate> closed_list = new HashSet<>();
+        final PriorityQueueTieByTime<DijkstraQueueEntry> open_list = new PriorityQueueTieByTime<>();
         open_list.add(firstDijkstraQueueEntry);
-        closed_list.add(firstDijkstraQueueEntry.vertex.coordinate());
-
 
         boolean addedTeleportsUpTo30Wildy = false;
         boolean addedTeleportsUpTo20Wildy = false;
         while (open_list.peek() != null) {
             final DijkstraQueueEntry current = open_list.remove();
+
+            if(closed_list.contains(current.vertex().coordinate())) {
+                continue;
+            }
+            closed_list.add(current.vertex().coordinate());
 
             // Goal found?
             if (current.vertex().coordinate().equals(end)) {
@@ -43,11 +45,7 @@ public class PathFinder {
             current.vertex().neighbors().stream()
                     .map(n -> new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), (current.totalCost()) + n.cost()))
                     .filter(entry -> !blacklist.contains(entry.methodOfMovement()))
-                    .filter(entry -> !closed_list.contains(entry.vertex().coordinate()))
-                    .forEachOrdered(entry -> {
-                        open_list.add(entry);
-                        closed_list.add(entry.vertex().coordinate());
-                    });
+                    .forEachOrdered(open_list::add);
 
             // If teleports haven't been added, add them to open_list, depending on wildy level
             // Teleports up to lvl 30
@@ -55,14 +53,10 @@ public class PathFinder {
             if (addTeleportsUpTo30Wildy) {
                 graph.teleports().stream()
                         .filter(Teleport::canTeleportUpTo30Wildy)
-                        .filter(tp -> graph.vertices().containsKey(tp.destination()))
                         .filter(tp -> !blacklist.contains(tp.title()))
-                        .filter(tp -> !closed_list.contains(tp.destination()))
+                        .filter(tp -> graph.vertices().containsKey(tp.destination()))
                         .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), tp.duration()))
-                        .forEachOrdered(entry -> {
-                            open_list.add(entry);
-                            closed_list.add(entry.vertex().coordinate());
-                        });
+                        .forEachOrdered(open_list::add);
                 addedTeleportsUpTo30Wildy = true;
             }
 
@@ -71,14 +65,10 @@ public class PathFinder {
             if (addTeleportsUpTo20Wildy) {
                 graph.teleports().stream()
                         .filter(tp -> !tp.canTeleportUpTo30Wildy())
-                        .filter(tp -> graph.vertices().containsKey(tp.destination()))
                         .filter(tp -> !blacklist.contains(tp.title()))
-                        .filter(tp -> !closed_list.contains(tp.destination()))
+                        .filter(tp -> graph.vertices().containsKey(tp.destination()))
                         .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), tp.duration()))
-                        .forEachOrdered(entry -> {
-                            open_list.add(entry);
-                            closed_list.add(entry.vertex().coordinate());
-                        });
+                        .forEachOrdered(open_list::add);
                 addedTeleportsUpTo20Wildy = true;
             }
         }
