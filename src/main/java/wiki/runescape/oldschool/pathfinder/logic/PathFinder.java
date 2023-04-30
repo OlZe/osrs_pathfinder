@@ -41,10 +41,23 @@ public class PathFinder {
                 return new PathFinderResult(true, this.backtrack(current), System.currentTimeMillis() - startTime);
             }
 
+            final boolean walkedHere = current.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
+
             // Add neighbours of vertex to open_list
             current.vertex().neighbors().stream()
-                    .map(n -> new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), (current.totalCost()) + n.cost()))
-                    .filter(entry -> !blacklist.contains(entry.methodOfMovement()))
+                    .filter(n -> !blacklist.contains(n.methodOfMovement()))
+                    .map(n -> {
+                        float totalCost = current.totalCost();
+                        if(walkedHere) {
+                            // Round up if walking stops
+                            final boolean isGoingToWalk = n.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
+                            if(!isGoingToWalk) {
+                                totalCost = (float) Math.ceil(totalCost);
+                            }
+                        }
+                        totalCost += n.cost();
+                        return new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), totalCost);
+                    })
                     .forEachOrdered(open_list::add);
 
             // If teleports haven't been added, add them to open_list, depending on wildy level
@@ -55,7 +68,14 @@ public class PathFinder {
                         .filter(Teleport::canTeleportUpTo30Wildy)
                         .filter(tp -> !blacklist.contains(tp.title()))
                         .filter(tp -> graph.vertices().containsKey(tp.destination()))
-                        .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), tp.duration()))
+                        .map(tp -> {
+                            float totalCost = current.totalCost();
+                            if(walkedHere) {
+                                totalCost = (float) Math.ceil(totalCost);
+                            }
+                            totalCost += tp.duration();
+                            return new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), totalCost);
+                        })
                         .forEachOrdered(open_list::add);
                 addedTeleportsUpTo30Wildy = true;
             }
@@ -67,7 +87,14 @@ public class PathFinder {
                         .filter(tp -> !tp.canTeleportUpTo30Wildy())
                         .filter(tp -> !blacklist.contains(tp.title()))
                         .filter(tp -> graph.vertices().containsKey(tp.destination()))
-                        .map(tp -> new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), tp.duration()))
+                        .map(tp -> {
+                            float totalCost = current.totalCost();
+                            if(walkedHere) {
+                                totalCost = (float) Math.ceil(totalCost);
+                            }
+                            totalCost += tp.duration();
+                            return new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), totalCost);
+                        })
                         .forEachOrdered(open_list::add);
                 addedTeleportsUpTo20Wildy = true;
             }
@@ -103,7 +130,7 @@ public class PathFinder {
             GraphVertex vertex,
             DijkstraQueueEntry previous,
             String methodOfMovement,
-            int totalCost)
+            float totalCost)
 
             implements Comparable<DijkstraQueueEntry> {
 
@@ -113,7 +140,7 @@ public class PathFinder {
 
         @Override
         public int compareTo(final DijkstraQueueEntry o) {
-            return this.totalCost - o.totalCost;
+            return Float.compare(this.totalCost, o.totalCost);
         }
     }
 }

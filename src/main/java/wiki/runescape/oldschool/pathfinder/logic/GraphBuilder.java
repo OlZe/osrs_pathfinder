@@ -8,14 +8,15 @@ import java.io.IOException;
 import java.util.*;
 
 public class GraphBuilder {
-    public static final String WALK_NORTH_WEST = "walk north west";
-    public static final String WALK_SOUTH_EAST = "walk south east";
-    public static final String WALK_SOUTH_WEST = "walk south west";
-    public static final String WALK_NORTH_EAST = "walk north east";
-    public static final String WALK_EAST = "walk east";
-    public static final String WALK_WEST = "walk west";
-    public static final String WALK_NORTH = "walk north";
-    public static final String WALK_SOUTH = "walk south";
+    public static final String WALK_PREFIX = "walk";
+    public static final String WALK_NORTH_WEST = WALK_PREFIX + " north west";
+    public static final String WALK_SOUTH_EAST = WALK_PREFIX + " south east";
+    public static final String WALK_SOUTH_WEST = WALK_PREFIX + " south west";
+    public static final String WALK_NORTH_EAST = WALK_PREFIX + " north east";
+    public static final String WALK_EAST = WALK_PREFIX + " east";
+    public static final String WALK_WEST = WALK_PREFIX + " west";
+    public static final String WALK_NORTH = WALK_PREFIX + " north";
+    public static final String WALK_SOUTH = WALK_PREFIX + " south";
 
     private final Logger logger = LoggerFactory.getLogger(GraphBuilder.class);
 
@@ -43,7 +44,6 @@ public class GraphBuilder {
         logger.info("link vertices by transports");
         this.addTransports(graphVertices, mapData.transports());
 
-
         logger.info("done");
         return new Graph(graphVertices, mapData.teleports());
     }
@@ -70,15 +70,15 @@ public class GraphBuilder {
             // North
             final GraphVertex northVertex = graph.get(coordinate.moveNorth());
             if (northVertex != null && this.canMoveNorth(coordinate, tileMap)) {
-                vertex.addEdgeTo(northVertex, (byte) 1, WALK_NORTH);
-                northVertex.addEdgeTo(vertex, (byte) 1, WALK_SOUTH);
+                vertex.addEdgeTo(northVertex, 0.5f , WALK_NORTH);
+                northVertex.addEdgeTo(vertex, 0.5f, WALK_SOUTH);
             }
 
             // East
             final GraphVertex eastVertex = graph.get(coordinate.moveEast());
             if (eastVertex != null && this.canMoveEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(eastVertex, (byte) 1, WALK_EAST);
-                eastVertex.addEdgeTo(vertex, (byte) 1, WALK_WEST);
+                vertex.addEdgeTo(eastVertex, 0.5f, WALK_EAST);
+                eastVertex.addEdgeTo(vertex, 0.5f, WALK_WEST);
             }
         });
 
@@ -90,15 +90,15 @@ public class GraphBuilder {
             // North East
             final GraphVertex northEastVertex = graph.get(coordinate.moveNorth().moveEast());
             if (northEastVertex != null && this.canMoveNorthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(northEastVertex, (byte) 1, WALK_NORTH_EAST);
-                northEastVertex.addEdgeTo(vertex, (byte) 1, WALK_SOUTH_WEST);
+                vertex.addEdgeTo(northEastVertex, 0.5f, WALK_NORTH_EAST);
+                northEastVertex.addEdgeTo(vertex, 0.5f, WALK_SOUTH_WEST);
             }
 
             // South East
             final GraphVertex southEastVertex = graph.get(coordinate.moveSouth().moveEast());
             if (southEastVertex != null && this.canMoveSouthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(southEastVertex, (byte) 1, WALK_SOUTH_EAST);
-                southEastVertex.addEdgeTo(vertex, (byte) 1, WALK_NORTH_WEST);
+                vertex.addEdgeTo(southEastVertex, 0.5f, WALK_SOUTH_EAST);
+                southEastVertex.addEdgeTo(vertex, 0.5f, WALK_NORTH_WEST);
             }
         });
 

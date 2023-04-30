@@ -10,7 +10,7 @@ public record GraphVertex(Coordinate coordinate, List<GraphEdge> neighbors, Posi
      * Adds a unidirectional edge from this Vertex to the newNeighbour
      * @param newNeighbour The new neighbour
      */
-    public void addEdgeTo(GraphVertex newNeighbour, byte cost, String methodOfMovement) {
+    public void addEdgeTo(GraphVertex newNeighbour, float cost, String methodOfMovement) {
         this.neighbors.add(new GraphEdge(newNeighbour, cost, methodOfMovement));
     }
 
