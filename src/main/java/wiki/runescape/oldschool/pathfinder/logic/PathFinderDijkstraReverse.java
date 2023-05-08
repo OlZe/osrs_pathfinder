@@ -48,10 +48,23 @@ public class PathFinderDijkstraReverse implements PathFinder {
                 return new PathFinder.Result(true, this.backtrack(current), System.currentTimeMillis() - startTime);
             }
 
+            final boolean isWalking = current.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
+
             // Add neighbours of vertex to open_list
             current.vertex().edgesIn().stream()
                     .filter(edgeIn -> !blacklist.contains(edgeIn.methodOfMovement()))
-                    .map(edgeIn -> new DijkstraQueueEntry(edgeIn.from(), current, edgeIn.methodOfMovement(), current.totalCost() + edgeIn.cost()))
+                    .map(edgeIn -> {
+                        float totalCost = current.totalCost();
+                        if (isWalking) {
+                            // Round up if walking stops
+                            final boolean isGoingToWalk = edgeIn.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
+                            if (!isGoingToWalk) {
+                                totalCost = (float) Math.ceil(totalCost);
+                            }
+                        }
+                        totalCost += edgeIn.cost();
+                        return new DijkstraQueueEntry(edgeIn.from(), current, edgeIn.methodOfMovement(), totalCost);
+                    })
                     .forEachOrdered(open_list::add);
 
             // Add teleports going here to open_list
@@ -59,11 +72,18 @@ public class PathFinderDijkstraReverse implements PathFinder {
             if (teleportsHere != null) {
                 teleportsHere.stream()
                         .filter(teleport -> !blacklist.contains(teleport.title()))
-                        .map(teleport -> new DijkstraQueueEntry(
-                                graph.vertices().get(start),
-                                current,
-                                teleport.title(),
-                                current.totalCost() + teleport.duration()))
+                        .map(teleport -> {
+                            float totalCost = current.totalCost();
+                            if (isWalking) {
+                                totalCost = (float) Math.ceil(totalCost);
+                            }
+                            totalCost += teleport.duration();
+                            return new DijkstraQueueEntry(
+                                    graph.vertices().get(start),
+                                    current,
+                                    teleport.title(),
+                                    totalCost);
+                        })
                         .forEachOrdered(open_list::add);
             }
         }
