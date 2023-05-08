@@ -12,12 +12,13 @@ import java.util.stream.Collectors;
 @RestController
 public class PathController {
 
-    private static final Map<String, PathFinder> ALGORITHM_STRING_TO_CLASS = Map.of(
+    private final Graph graph = new GraphBuilder().buildGraph();
+
+    private final Map<String, PathFinder> ALGORITHM_STRING_TO_CLASS = Map.of(
             "dijkstra", new PathFinderDijkstra(),
-            "dijkstra-reverse", new PathFinderDijkstraReverse()
+            "dijkstra-reverse", new PathFinderDijkstraReverse(graph.teleports())
     );
 
-    private final Graph graph = new GraphBuilder().buildGraph();
     public PathController() throws IOException {
     }
 

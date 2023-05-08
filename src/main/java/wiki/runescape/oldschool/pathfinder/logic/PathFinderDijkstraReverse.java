@@ -1,12 +1,18 @@
 package wiki.runescape.oldschool.pathfinder.logic;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class PathFinderDijkstraReverse implements PathFinder {
 
+    /**
+     * Allows efficient query of teleports for a given coordinate.
+     */
+    private final Map<Coordinate, List<Teleport>> teleports;
+
+    public PathFinderDijkstraReverse(final Collection<Teleport> teleports) {
+        this.teleports = teleports.stream().collect(Collectors.groupingBy(Teleport::destination));
+    }
 
     @Override
     public Result findPath(final Graph graph, final Coordinate start, final Coordinate end, final Set<String> blacklist) {
@@ -15,10 +21,12 @@ public class PathFinderDijkstraReverse implements PathFinder {
         // Determine ending position
         final GraphVertex endVertex = graph.vertices().get(end);
         assert endVertex != null;
+        final GraphVertex startVertex = graph.vertices().get(start);
+        assert startVertex != null;
         final DijkstraQueueEntry firstQueueEntry = new DijkstraQueueEntry(endVertex, null, "end", 0);
 
         // if start == end, return
-        if(start.equals(end)) {
+        if (start.equals(end)) {
             return new PathFinder.Result(true, this.backtrack(firstQueueEntry), System.currentTimeMillis() - startTime);
         }
 
@@ -27,16 +35,16 @@ public class PathFinderDijkstraReverse implements PathFinder {
         final PriorityQueueTieByTime<DijkstraQueueEntry> open_list = new PriorityQueueTieByTime<>();
         open_list.add(firstQueueEntry);
 
-        while(open_list.peek() != null) {
+        while (open_list.peek() != null) {
             final DijkstraQueueEntry current = open_list.remove();
 
-            if(closed_list.contains(current.vertex().coordinate())) {
+            if (closed_list.contains(current.vertex().coordinate())) {
                 continue;
             }
             closed_list.add(current.vertex().coordinate());
 
             // Start found?
-            if(current.vertex().coordinate().equals(start)) {
+            if (current.vertex().coordinate().equals(start)) {
                 return new PathFinder.Result(true, this.backtrack(current), System.currentTimeMillis() - startTime);
             }
 
@@ -45,6 +53,19 @@ public class PathFinderDijkstraReverse implements PathFinder {
                     .filter(edgeIn -> !blacklist.contains(edgeIn.methodOfMovement()))
                     .map(edgeIn -> new DijkstraQueueEntry(edgeIn.from(), current, edgeIn.methodOfMovement(), current.totalCost() + edgeIn.cost()))
                     .forEachOrdered(open_list::add);
+
+            // Add teleports going here to open_list
+            final List<Teleport> teleportsHere = this.teleports.get(current.vertex().coordinate());
+            if (teleportsHere != null) {
+                teleportsHere.stream()
+                        .filter(teleport -> !blacklist.contains(teleport.title()))
+                        .map(teleport -> new DijkstraQueueEntry(
+                                graph.vertices().get(start),
+                                current,
+                                teleport.title(),
+                                current.totalCost() + teleport.duration()))
+                        .forEachOrdered(open_list::add);
+            }
         }
 
         // No path found
@@ -57,7 +78,7 @@ public class PathFinderDijkstraReverse implements PathFinder {
         path.add(new Result.Movement(start.vertex().coordinate(), "start"));
 
         DijkstraQueueEntry current = start;
-        while(!current.isEnd()) {
+        while (!current.isEnd()) {
             path.add(new Result.Movement(current.successor().vertex().coordinate(), current.methodOfMovement()));
             current = current.successor();
         }
