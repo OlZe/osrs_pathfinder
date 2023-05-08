@@ -10,13 +10,12 @@ import java.util.Collection;
 @RestController
 public class PathController {
 
-    private final Graph graph;
-    private final PathFinderDijkstra pathFinder;
+    private final Graph graph = new GraphBuilder().buildGraph();
+    private final PathFinder pathFinder = new PathFinderDijkstraReverse();
 
     public PathController() throws IOException {
-        this.graph = new GraphBuilder().buildGraph();
-        this.pathFinder = new PathFinderDijkstra();
     }
+
 
     @PostMapping("api/path.json")
     public PathFinder.Result getPath(@RequestBody FindPathRequest pathRequest) {
