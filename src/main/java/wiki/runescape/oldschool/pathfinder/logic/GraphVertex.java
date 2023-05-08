@@ -4,14 +4,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public record GraphVertex(Coordinate coordinate, List<GraphEdge> neighbors, PositionInfo.WildernessLevels wildernessLevel) {
+public record GraphVertex(
+        Coordinate coordinate,
+        List<GraphEdge> edgesOut,
+        List<GraphEdge> edgesIn,
+        PositionInfo.WildernessLevels wildernessLevel) {
 
     /**
      * Adds a unidirectional edge from this Vertex to the newNeighbour
      * @param newNeighbour The new neighbour
      */
     public void addEdgeTo(GraphVertex newNeighbour, float cost, String methodOfMovement) {
-        this.neighbors.add(new GraphEdge(newNeighbour, cost, methodOfMovement));
+        assert !newNeighbour.equals(this);
+        final GraphEdge newEdge = new GraphEdge(this, newNeighbour, cost, methodOfMovement);
+        this.edgesOut.add(newEdge);
+        newNeighbour.edgesIn.add(newEdge);
     }
 
     /**
@@ -21,7 +28,7 @@ public record GraphVertex(Coordinate coordinate, List<GraphEdge> neighbors, Posi
      */
     @Override
     public String toString() {
-        final String neighbours = this.neighbors.stream()
+        final String neighbours = this.edgesOut.stream()
                 .map(GraphEdge::methodOfMovement)
                 .map(s -> switch (s) { // Shorten walking strings for better debugging
                     case GraphBuilder.WALK_NORTH -> "N";

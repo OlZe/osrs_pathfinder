@@ -57,7 +57,7 @@ public class GraphBuilder {
 
         // Put tiles into graph
         tileMap.forEach((coordinate, value) -> {
-            final GraphVertex vertex = new GraphVertex(coordinate, new LinkedList<>(), value.wildernessLevel());
+            final GraphVertex vertex = new GraphVertex(coordinate, new LinkedList<>(), new LinkedList<>(), value.wildernessLevel());
             graph.put(coordinate, vertex);
         });
 
@@ -122,7 +122,7 @@ public class GraphBuilder {
             }
 
             // Duplicate edge detection
-            final Optional<GraphEdge> duplicateEdge = fromVertex.neighbors().stream()
+            final Optional<GraphEdge> duplicateEdge = fromVertex.edgesOut().stream()
                     .filter(edge -> edge.to().coordinate().equals(toVertex.coordinate()))
                     .findAny();
 

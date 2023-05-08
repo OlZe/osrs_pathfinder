@@ -44,7 +44,7 @@ public class PathFinderDijkstra implements PathFinder {
             final boolean walkedHere = current.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
 
             // Add neighbours of vertex to open_list
-            current.vertex().neighbors().stream()
+            current.vertex().edgesOut().stream()
                     .filter(n -> !blacklist.contains(n.methodOfMovement()))
                     .map(n -> {
                         float totalCost = current.totalCost();

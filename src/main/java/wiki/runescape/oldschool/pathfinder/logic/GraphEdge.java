@@ -1,5 +1,5 @@
 package wiki.runescape.oldschool.pathfinder.logic;
 
-public record GraphEdge(GraphVertex to, float cost, String methodOfMovement) {
+public record GraphEdge(GraphVertex from, GraphVertex to, float cost, String methodOfMovement) {
 
 }
