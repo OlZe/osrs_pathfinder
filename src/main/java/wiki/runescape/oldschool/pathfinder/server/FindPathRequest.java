@@ -7,6 +7,8 @@ import java.util.Set;
 public record FindPathRequest(
     Coordinate from,
     Coordinate to,
-    Set<String> blacklist
+    Set<String> blacklist,
+
+    String algorithm
 ) {
 }

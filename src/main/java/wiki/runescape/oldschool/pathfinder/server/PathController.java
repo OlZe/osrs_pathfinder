@@ -5,14 +5,19 @@ import wiki.runescape.oldschool.pathfinder.logic.*;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
 public class PathController {
 
-    private final Graph graph = new GraphBuilder().buildGraph();
-    private final PathFinder pathFinder = new PathFinderDijkstraReverse();
+    private static final Map<String, PathFinder> ALGORITHM_STRING_TO_CLASS = Map.of(
+            "dijkstra", new PathFinderDijkstra(),
+            "dijkstra-reverse", new PathFinderDijkstraReverse()
+    );
 
+    private final Graph graph = new GraphBuilder().buildGraph();
     public PathController() throws IOException {
     }
 
@@ -23,7 +28,13 @@ public class PathController {
             return new PathFinder.Result(false, null, 0);
         }
 
-        return this.pathFinder.findPath(this.graph, pathRequest.from(), pathRequest.to(), pathRequest.blacklist());
+        final PathFinder pathFinder = ALGORITHM_STRING_TO_CLASS.get(pathRequest.algorithm());
+        if(pathFinder == null) {
+            throw new IllegalArgumentException("Field 'algorithm' of request contains invalid value: " + pathRequest.algorithm() +
+                    "\nAllowed values are: " + ALGORITHM_STRING_TO_CLASS.keySet().stream().collect(Collectors.joining(", ")));
+        }
+
+        return pathFinder.findPath(this.graph, pathRequest.from(), pathRequest.to(), pathRequest.blacklist());
     }
 
     @GetMapping("api/transports-teleports.json")
