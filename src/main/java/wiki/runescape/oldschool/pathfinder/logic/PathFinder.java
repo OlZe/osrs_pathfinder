@@ -8,7 +8,12 @@ public interface PathFinder {
     Result findPath(Graph graph, Coordinate start, Coordinate end, Set<String> blacklist);
 
 
-    record Result(boolean pathFound, List<Movement> path, long computeTime) {
+    record Result(boolean pathFound,
+                  List<Movement> path,
+                  int totalCost,
+                  long computeTimeMs,
+                  int amountExpandedVertices,
+                  int amountVerticesLeftInQueue) {
 
         public record Movement(Coordinate destination, String methodOfMovement) {
 

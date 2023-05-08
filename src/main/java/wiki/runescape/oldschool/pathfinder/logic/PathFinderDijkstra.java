@@ -18,7 +18,7 @@ public class PathFinderDijkstra implements PathFinder {
 
         // if start == end, return
         if (start.equals(end)) {
-            return new PathFinder.Result(true, this.backtrack(firstDijkstraQueueEntry), System.currentTimeMillis() - startTime);
+            return new PathFinder.Result(true, this.backtrack(firstDijkstraQueueEntry), 0, System.currentTimeMillis() - startTime, 0, 0);
         }
 
         // Init open_list and closed_list
@@ -38,7 +38,7 @@ public class PathFinderDijkstra implements PathFinder {
 
             // Goal found?
             if (current.vertex().coordinate().equals(end)) {
-                return new PathFinder.Result(true, this.backtrack(current), System.currentTimeMillis() - startTime);
+                return new PathFinder.Result(true, this.backtrack(current), (int) current.totalCost(), System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
             }
 
             final boolean walkedHere = current.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
@@ -101,7 +101,7 @@ public class PathFinderDijkstra implements PathFinder {
         }
 
         // No Path found
-        return new PathFinder.Result(false, null, System.currentTimeMillis() - startTime);
+        return new PathFinder.Result(false, null, 0,System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
     }
 
 

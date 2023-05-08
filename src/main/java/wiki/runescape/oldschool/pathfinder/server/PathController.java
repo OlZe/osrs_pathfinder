@@ -25,12 +25,12 @@ public class PathController {
 
     @PostMapping("api/path.json")
     public PathFinder.Result getPath(@RequestBody FindPathRequest pathRequest) {
-        if(!this.graph.isWalkable(pathRequest.from()) || !this.graph.isWalkable(pathRequest.to())) {
-            return new PathFinder.Result(false, null, 0);
+        if (!this.graph.isWalkable(pathRequest.from()) || !this.graph.isWalkable(pathRequest.to())) {
+            return new PathFinder.Result(false, null, 0, 0, 0, 0);
         }
 
         final PathFinder pathFinder = ALGORITHM_STRING_TO_CLASS.get(pathRequest.algorithm());
-        if(pathFinder == null) {
+        if (pathFinder == null) {
             throw new IllegalArgumentException("Field 'algorithm' of request contains invalid value: " + pathRequest.algorithm() +
                     "\nAllowed values are: " + ALGORITHM_STRING_TO_CLASS.keySet().stream().collect(Collectors.joining(", ")));
         }

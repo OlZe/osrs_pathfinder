@@ -28,6 +28,10 @@ public class PriorityQueueTieByTime<E extends Comparable<E>> {
         return this.queue.remove().element;
     }
 
+    public int size() {
+        return this.queue.size();
+    }
+
 
     private record QueueEntry<E extends Comparable<E>>(E element,
                                                        int insertionCount) implements Comparable<QueueEntry<E>> {
