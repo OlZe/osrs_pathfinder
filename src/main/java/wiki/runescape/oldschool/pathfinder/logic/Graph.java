@@ -26,9 +26,9 @@ public record Graph(Map<Coordinate, GraphVertex> vertices, Collection<Teleport> 
                 .forEachOrdered(allTeleportsTransports::add);
 
         this.vertices.values().stream()
-                .flatMap(v -> v.edgesOut().stream())
-                .map(GraphEdge::methodOfMovement)
-                .filter(t -> !t.contains("walk") && !t.equals("start"))
+                .flatMap(vertex -> vertex.edgesOut().stream())
+                .filter(edge -> !edge.isWalking())
+                .map(GraphEdge::title)
                 .distinct()
                 .forEachOrdered(allTeleportsTransports::add);
 

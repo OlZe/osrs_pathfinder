@@ -3,6 +3,9 @@ package wiki.runescape.oldschool.pathfinder.logic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.DataDeserializer;
+import wiki.runescape.oldschool.pathfinder.data_deserialization.PositionInfo;
+import wiki.runescape.oldschool.pathfinder.data_deserialization.TeleportJson;
+import wiki.runescape.oldschool.pathfinder.data_deserialization.TransportJson;
 
 import java.io.IOException;
 import java.util.*;
@@ -20,12 +23,6 @@ public class GraphBuilder {
 
     private final Logger logger = LoggerFactory.getLogger(GraphBuilder.class);
 
-    /**
-     * Reads the json files and builds a graph structure
-     *
-     * @return The graph
-     * @throws IOException can't read files
-     */
     public Graph buildGraph() throws IOException {
         final Logger logger = LoggerFactory.getLogger(GraphBuilder.class);
 
@@ -44,9 +41,32 @@ public class GraphBuilder {
         logger.info("link vertices by transports");
         this.addTransports(graphVertices, mapData.transports());
 
+        // Process teleports
+        logger.info("link teleports to vertices");
+        Collection<Teleport> teleports = this.makeTeleports(graphVertices, mapData.teleports());
+
         logger.info("done");
-        return new Graph(graphVertices, mapData.teleports());
+        return new Graph(graphVertices, teleports);
     }
+
+    private Collection<Teleport> makeTeleports(final Map<Coordinate, GraphVertex> graphVertices, final Collection<TeleportJson> teleportsJson) {
+        List<Teleport> teleports = new LinkedList<>();
+        for(TeleportJson teleportJson : teleportsJson) {
+            final GraphVertex to = graphVertices.get(teleportJson.to());
+            if(to == null) {
+                logger.warn("Vertex for Teleport " + teleportJson + " does not exist in graph");
+                continue;
+            }
+            teleports.add(new Teleport(
+                    to,
+                    teleportJson.title(),
+                    teleportJson.duration(),
+                    teleportJson.canTeleportUpTo30Wildy()
+            ));
+        }
+        return teleports;
+    }
+
 
     /**
      * @param tileMap A Map of Tiles
@@ -70,15 +90,15 @@ public class GraphBuilder {
             // North
             final GraphVertex northVertex = graph.get(coordinate.moveNorth());
             if (northVertex != null && this.canMoveNorth(coordinate, tileMap)) {
-                vertex.addEdgeTo(northVertex, 0.5f , WALK_NORTH);
-                northVertex.addEdgeTo(vertex, 0.5f, WALK_SOUTH);
+                vertex.addEdgeTo(northVertex, 0.5f , WALK_NORTH, true);
+                northVertex.addEdgeTo(vertex, 0.5f, WALK_SOUTH, true);
             }
 
             // East
             final GraphVertex eastVertex = graph.get(coordinate.moveEast());
             if (eastVertex != null && this.canMoveEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(eastVertex, 0.5f, WALK_EAST);
-                eastVertex.addEdgeTo(vertex, 0.5f, WALK_WEST);
+                vertex.addEdgeTo(eastVertex, 0.5f, WALK_EAST, true);
+                eastVertex.addEdgeTo(vertex, 0.5f, WALK_WEST, true);
             }
         });
 
@@ -90,15 +110,15 @@ public class GraphBuilder {
             // North East
             final GraphVertex northEastVertex = graph.get(coordinate.moveNorth().moveEast());
             if (northEastVertex != null && this.canMoveNorthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(northEastVertex, 0.5f, WALK_NORTH_EAST);
-                northEastVertex.addEdgeTo(vertex, 0.5f, WALK_SOUTH_WEST);
+                vertex.addEdgeTo(northEastVertex, 0.5f, WALK_NORTH_EAST, true);
+                northEastVertex.addEdgeTo(vertex, 0.5f, WALK_SOUTH_WEST, true);
             }
 
             // South East
             final GraphVertex southEastVertex = graph.get(coordinate.moveSouth().moveEast());
             if (southEastVertex != null && this.canMoveSouthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(southEastVertex, 0.5f, WALK_SOUTH_EAST);
-                southEastVertex.addEdgeTo(vertex, 0.5f, WALK_NORTH_WEST);
+                vertex.addEdgeTo(southEastVertex, 0.5f, WALK_SOUTH_EAST, true);
+                southEastVertex.addEdgeTo(vertex, 0.5f, WALK_NORTH_WEST, true);
             }
         });
 
@@ -111,7 +131,7 @@ public class GraphBuilder {
      * @param graph      The vertices of which just walkable ones have been linked
      * @param transports The deserialized transport data
      */
-    private void addTransports(Map<Coordinate, GraphVertex> graph, Collection<Transport> transports) {
+    private void addTransports(Map<Coordinate, GraphVertex> graph, Collection<TransportJson> transports) {
         transports.forEach(transport -> {
             final GraphVertex fromVertex = graph.get(transport.from());
             final GraphVertex toVertex = graph.get(transport.to());
@@ -128,11 +148,11 @@ public class GraphBuilder {
 
             if (duplicateEdge.isPresent()) {
                 this.logger.warn("Duplicate edge " + fromVertex.coordinate() + "->" + toVertex.coordinate() + ": "
-                        + "Existing edge: '" + duplicateEdge.get().methodOfMovement() + "' cost " + duplicateEdge.get().cost() + "; "
+                        + "Existing edge: '" + duplicateEdge.get().title() + "' cost " + duplicateEdge.get().cost() + "; "
                         + "Ignoring new edge: '" + transport.title() + "' cost " + transport.duration() + ".");
                 return;
             }
-            fromVertex.addEdgeTo(toVertex, transport.duration(), transport.title());
+            fromVertex.addEdgeTo(toVertex, transport.duration(), transport.title(), false);
         });
     }
 

@@ -8,15 +8,15 @@ public record GraphVertex(
         Coordinate coordinate,
         List<GraphEdge> edgesOut,
         List<GraphEdge> edgesIn,
-        PositionInfo.WildernessLevels wildernessLevel) {
+        WildernessLevels wildernessLevel) {
 
     /**
      * Adds a unidirectional edge from this Vertex to the newNeighbour
      * @param newNeighbour The new neighbour
      */
-    public void addEdgeTo(GraphVertex newNeighbour, float cost, String methodOfMovement) {
+    public void addEdgeTo(GraphVertex newNeighbour, float cost, String methodOfMovement, boolean isWalking) {
         assert !newNeighbour.equals(this);
-        final GraphEdge newEdge = new GraphEdge(this, newNeighbour, cost, methodOfMovement);
+        final GraphEdge newEdge = new GraphEdgeImpl(this, newNeighbour, cost, methodOfMovement, isWalking);
         this.edgesOut.add(newEdge);
         newNeighbour.edgesIn.add(newEdge);
     }
@@ -29,7 +29,7 @@ public record GraphVertex(
     @Override
     public String toString() {
         final String neighbours = this.edgesOut.stream()
-                .map(GraphEdge::methodOfMovement)
+                .map(GraphEdge::title)
                 .map(s -> switch (s) { // Shorten walking strings for better debugging
                     case GraphBuilder.WALK_NORTH -> "N";
                     case GraphBuilder.WALK_EAST -> "E";

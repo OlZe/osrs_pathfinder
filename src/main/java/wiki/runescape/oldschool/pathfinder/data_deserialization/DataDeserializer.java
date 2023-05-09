@@ -1,9 +1,7 @@
 package wiki.runescape.oldschool.pathfinder.data_deserialization;
 
 import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
-import wiki.runescape.oldschool.pathfinder.logic.PositionInfo;
-import wiki.runescape.oldschool.pathfinder.logic.Teleport;
-import wiki.runescape.oldschool.pathfinder.logic.Transport;
+import wiki.runescape.oldschool.pathfinder.logic.WildernessLevels;
 
 import java.io.*;
 import java.util.Collection;
@@ -29,8 +27,8 @@ public class DataDeserializer {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(zipIn));
 
             Map<Coordinate, PositionInfo> walkableTiles = null;
-            Collection<Teleport> teleports = null;
-            Collection<Transport> transports = null;
+            Collection<TeleportJson> teleports = null;
+            Collection<TransportJson> transports = null;
 
             ZipEntry currentEntry = zipIn.getNextEntry();
             while (currentEntry != null) {
@@ -66,10 +64,10 @@ public class DataDeserializer {
                             Integer.parseInt(positionData[0]),
                             Integer.parseInt(positionData[1]),
                             Integer.parseInt(positionData[2]));
-                    final PositionInfo.WildernessLevels wildernessLevel = switch (Integer.parseInt(positionData[7])) {
-                        case 0 -> PositionInfo.WildernessLevels.BELOW20;
-                        case 1 -> PositionInfo.WildernessLevels.BETWEEN20AND30;
-                        case 2 -> PositionInfo.WildernessLevels.ABOVE30;
+                    final WildernessLevels wildernessLevel = switch (Integer.parseInt(positionData[7])) {
+                        case 0 -> WildernessLevels.BELOW20;
+                        case 1 -> WildernessLevels.BETWEEN20AND30;
+                        case 2 -> WildernessLevels.ABOVE30;
                         default ->
                                 throw new IllegalStateException("Error reading Wilderness Level: " + Integer.parseInt(positionData[7]));
                     };
@@ -86,7 +84,7 @@ public class DataDeserializer {
         return tiles;
     }
 
-    private Collection<Transport> readTransports(BufferedReader transportDataStream) {
+    private Collection<TransportJson> readTransports(BufferedReader transportDataStream) {
         return transportDataStream.lines()
                 .filter(line -> !(line.startsWith("#") || line.isEmpty()))
                 .map(line -> {
@@ -100,7 +98,7 @@ public class DataDeserializer {
                             Integer.parseInt(parts[3]),
                             Integer.parseInt(parts[4]),
                             Integer.parseInt(parts[5]));
-                    return new Transport(
+                    return new TransportJson(
                             from,
                             to,
                             parts[7],
@@ -109,7 +107,7 @@ public class DataDeserializer {
                 .collect(Collectors.toList());
     }
 
-    private Collection<Teleport> readTeleports(BufferedReader teleportDataStream) {
+    private Collection<TeleportJson> readTeleports(BufferedReader teleportDataStream) {
         return teleportDataStream.lines()
                 .filter(line -> !(line.startsWith("#") || line.isEmpty()))
                 .map(line -> {
@@ -119,7 +117,7 @@ public class DataDeserializer {
                             Integer.parseInt(parts[0]),
                             Integer.parseInt(parts[1]),
                             Integer.parseInt(parts[2]));
-                    return new Teleport(
+                    return new TeleportJson(
                             to,
                             parts[4],
                             Byte.parseByte(parts[3]),
@@ -130,8 +128,8 @@ public class DataDeserializer {
 
     public record MapData(
             Map<Coordinate, PositionInfo> walkableTiles,
-            Collection<Teleport> teleports,
-            Collection<Transport> transports) {
+            Collection<TeleportJson> teleports,
+            Collection<TransportJson> transports) {
     }
 }
 

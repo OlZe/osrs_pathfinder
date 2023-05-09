@@ -45,55 +45,54 @@ public class PathFinderDijkstra implements PathFinder {
 
             // Add neighbours of vertex to open_list
             current.vertex().edgesOut().stream()
-                    .filter(n -> !blacklist.contains(n.methodOfMovement()))
+                    .filter(n -> !blacklist.contains(n.title()))
                     .map(n -> {
                         float totalCost = current.totalCost();
                         if (walkedHere) {
                             // Round up if walking stops
-                            final boolean isGoingToWalk = n.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
+                            final boolean isGoingToWalk = n.title().startsWith(GraphBuilder.WALK_PREFIX);
                             if (!isGoingToWalk) {
                                 totalCost = (float) Math.ceil(totalCost);
                             }
                         }
                         totalCost += n.cost();
-                        return new DijkstraQueueEntry(n.to(), current, n.methodOfMovement(), totalCost);
+                        return new DijkstraQueueEntry(n.to(), current, n.title(), totalCost);
                     })
                     .forEachOrdered(open_list::add);
 
             // If teleports haven't been added, add them to open_list, depending on wildy level
             // Teleports up to lvl 30
-            final boolean addTeleportsUpTo30Wildy = !addedTeleportsUpTo30Wildy && !(current.vertex.wildernessLevel().equals(PositionInfo.WildernessLevels.ABOVE30));
+            final boolean addTeleportsUpTo30Wildy = !addedTeleportsUpTo30Wildy && !(current.vertex.wildernessLevel().equals(WildernessLevels.ABOVE30));
             if (addTeleportsUpTo30Wildy) {
                 graph.teleports().stream()
                         .filter(Teleport::canTeleportUpTo30Wildy)
                         .filter(tp -> !blacklist.contains(tp.title()))
-                        .filter(tp -> graph.vertices().containsKey(tp.destination()))
+                        .filter(tp -> graph.vertices().containsKey(tp.to().coordinate()))
                         .map(tp -> {
                             float totalCost = current.totalCost();
                             if (walkedHere) {
                                 totalCost = (float) Math.ceil(totalCost);
                             }
-                            totalCost += tp.duration();
-                            return new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), totalCost);
+                            totalCost += tp.cost();
+                            return new DijkstraQueueEntry(tp.to(), current, tp.title(), totalCost);
                         })
                         .forEachOrdered(open_list::add);
                 addedTeleportsUpTo30Wildy = true;
             }
 
             // Teleports up to lvl 20
-            final boolean addTeleportsUpTo20Wildy = !addedTeleportsUpTo20Wildy && current.vertex.wildernessLevel().equals(PositionInfo.WildernessLevels.BELOW20);
+            final boolean addTeleportsUpTo20Wildy = !addedTeleportsUpTo20Wildy && current.vertex.wildernessLevel().equals(WildernessLevels.BELOW20);
             if (addTeleportsUpTo20Wildy) {
                 graph.teleports().stream()
                         .filter(tp -> !tp.canTeleportUpTo30Wildy())
                         .filter(tp -> !blacklist.contains(tp.title()))
-                        .filter(tp -> graph.vertices().containsKey(tp.destination()))
                         .map(tp -> {
                             float totalCost = current.totalCost();
                             if (walkedHere) {
                                 totalCost = (float) Math.ceil(totalCost);
                             }
-                            totalCost += tp.duration();
-                            return new DijkstraQueueEntry(graph.vertices().get(tp.destination()), current, tp.title(), totalCost);
+                            totalCost += tp.cost();
+                            return new DijkstraQueueEntry(tp.to(), current, tp.title(), totalCost);
                         })
                         .forEachOrdered(open_list::add);
                 addedTeleportsUpTo20Wildy = true;

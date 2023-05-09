@@ -11,7 +11,7 @@ public class PathFinderDijkstraReverse implements PathFinder {
     private final Map<Coordinate, List<Teleport>> teleports;
 
     public PathFinderDijkstraReverse(final Collection<Teleport> teleports) {
-        this.teleports = teleports.stream().collect(Collectors.groupingBy(Teleport::destination));
+        this.teleports = teleports.stream().collect(Collectors.groupingBy(tp -> tp.to().coordinate()));
     }
 
     @Override
@@ -59,18 +59,18 @@ public class PathFinderDijkstraReverse implements PathFinder {
 
             // Add neighbours of vertex to open_list
             current.vertex().edgesIn().stream()
-                    .filter(edgeIn -> !blacklist.contains(edgeIn.methodOfMovement()))
+                    .filter(edgeIn -> !blacklist.contains(edgeIn.title()))
                     .map(edgeIn -> {
                         float totalCost = current.totalCost();
                         if (isWalking) {
                             // Round up if walking stops
-                            final boolean isGoingToWalk = edgeIn.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
+                            final boolean isGoingToWalk = edgeIn.title().startsWith(GraphBuilder.WALK_PREFIX);
                             if (!isGoingToWalk) {
                                 totalCost = (float) Math.ceil(totalCost);
                             }
                         }
                         totalCost += edgeIn.cost();
-                        return new DijkstraQueueEntry(edgeIn.from(), current, edgeIn.methodOfMovement(), totalCost);
+                        return new DijkstraQueueEntry(edgeIn.from(), current, edgeIn.title(), totalCost);
                     })
                     .forEachOrdered(open_list::add);
 
@@ -84,7 +84,7 @@ public class PathFinderDijkstraReverse implements PathFinder {
                             if (isWalking) {
                                 totalCost = (float) Math.ceil(totalCost);
                             }
-                            totalCost += teleport.duration();
+                            totalCost += teleport.cost();
                             return new DijkstraQueueEntry(
                                     graph.vertices().get(start),
                                     current,
