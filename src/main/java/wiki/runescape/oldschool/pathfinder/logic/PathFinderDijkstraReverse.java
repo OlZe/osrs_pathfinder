@@ -43,12 +43,19 @@ public class PathFinderDijkstraReverse implements PathFinder {
             }
             closed_list.add(current.vertex().coordinate());
 
-            // Start found?
-            if (current.vertex().coordinate().equals(start)) {
-                return new PathFinder.Result(true, this.backtrack(current), (int) current.totalCost(), System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
-            }
 
             final boolean isWalking = current.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
+
+            // Start found?
+            if (current.vertex().coordinate().equals(start)) {
+                float totalCost = current.totalCost();
+                if(isWalking) {
+                    // Round up because walking stops
+                    totalCost = (float) Math.ceil(totalCost);
+                }
+                return new PathFinder.Result(true, this.backtrack(current), (int) totalCost, System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
+            }
+
 
             // Add neighbours of vertex to open_list
             current.vertex().edgesIn().stream()
