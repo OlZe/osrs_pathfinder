@@ -43,7 +43,7 @@ public class DataDeserializer {
                 currentEntry = zipIn.getNextEntry();
             }
             if (walkableTiles == null || teleports == null || transports == null) {
-                throw new IOException("Map data archive " + MAP_DATA_ARCHIVE_FILE + " is missing some of the required entires: "
+                throw new IOException("Map data archive " + MAP_DATA_ARCHIVE_FILE + " is missing some of the required entries: "
                         + ARCHIVE_ENTRY_MOVEMENT_DATA + "," + ARCHIVE_ENTRY_TELEPORTS + "," + ARCHIVE_ENTRY_TRANSPORTS);
             }
 
