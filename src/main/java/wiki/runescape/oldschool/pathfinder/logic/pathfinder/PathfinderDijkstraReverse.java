@@ -1,11 +1,8 @@
 package wiki.runescape.oldschool.pathfinder.logic.pathfinder;
 
-import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
-import wiki.runescape.oldschool.pathfinder.logic.graph.Graph;
-import wiki.runescape.oldschool.pathfinder.logic.graph.GraphBuilder;
-import wiki.runescape.oldschool.pathfinder.logic.graph.GraphVertex;
-import wiki.runescape.oldschool.pathfinder.logic.graph.Teleport;
-import wiki.runescape.oldschool.pathfinder.logic.queues.PriorityQueueTieByTime;
+import wiki.runescape.oldschool.pathfinder.logic.graph.*;
+import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingPriorityQueue;
+import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueue;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,130 +10,82 @@ import java.util.stream.Collectors;
 public class PathfinderDijkstraReverse extends Pathfinder {
 
     /**
-     * Allows efficient query of teleports for a given coordinate.
+     * Allows efficient query of teleports for a given vertex.
      */
-    private final Map<Coordinate, List<Teleport>> teleports;
+    private final Map<GraphVertex, List<Teleport>> teleports;
 
     public PathfinderDijkstraReverse(final Graph graph) {
         super(graph);
-        this.teleports = graph.teleports().stream().collect(Collectors.groupingBy(tp -> tp.to().coordinate()));
+        this.teleports = graph.teleports().stream().collect(Collectors.groupingBy(Teleport::to));
     }
 
     @Override
-    public PathfinderResult findPath(final Coordinate start, final Coordinate end, final Set<String> blacklist) {
-        final long startTime = System.currentTimeMillis();
+    public PartialPathfinderResult findPath(final GraphVertex start, final GraphVertex end, final Set<String> blacklist) {
+        final Set<GraphVertex> closedList = new HashSet<>();
+        final PathfindingQueue openList = new PathfindingPriorityQueue();
+        openList.enqueue(new GraphEdgeImpl(end, null, 0, "end", false), null);
 
-        // Determine ending position
-        final GraphVertex endVertex = graph.vertices().get(end);
-        assert endVertex != null;
-        final GraphVertex startVertex = graph.vertices().get(start);
-        assert startVertex != null;
-        final DijkstraQueueEntry firstQueueEntry = new DijkstraQueueEntry(endVertex, null, "end", 0);
+        while (openList.hasNext()) {
+            final PathfindingQueue.Entry currentEntry = openList.dequeue();
+            final GraphVertex currentVertex = currentEntry.edge().from();
 
-        // if start == end, return
-        if (start.equals(end)) {
-            return new PathfinderResult(true, this.backtrack(firstQueueEntry), 0, System.currentTimeMillis() - startTime, 0, 0);
-        }
-
-        // Init open_list and closed_list
-        final Set<Coordinate> closed_list = new HashSet<>();
-        final PriorityQueueTieByTime<DijkstraQueueEntry> open_list = new PriorityQueueTieByTime<>();
-        open_list.add(firstQueueEntry);
-
-        while (open_list.peek() != null) {
-            final DijkstraQueueEntry current = open_list.remove();
-
-            if (closed_list.contains(current.vertex().coordinate())) {
+            if (closedList.contains(currentVertex)) {
                 continue;
             }
-            closed_list.add(current.vertex().coordinate());
+            closedList.add(currentVertex);
 
-
-            final boolean isWalking = current.methodOfMovement().startsWith(GraphBuilder.WALK_PREFIX);
-
-            // Start found?
-            if (current.vertex().coordinate().equals(start)) {
-                float totalCost = current.totalCost();
-                if (isWalking) {
-                    // Round up because walking stops
-                    totalCost = (float) Math.ceil(totalCost);
-                }
-                return new PathfinderResult(true, this.backtrack(current), (int) totalCost, System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
+            // Teleport or start found?
+            if (currentVertex.equals(start)) {
+                return new PartialPathfinderResult(
+                        true,
+                        this.backtrack(currentEntry),
+                        (int) Math.ceil(currentEntry.totalCost()),
+                        closedList.size(),
+                        openList.size());
             }
 
 
-            // Add neighbours of vertex to open_list
-            current.vertex().edgesIn().stream()
-                    .filter(edgeIn -> !blacklist.contains(edgeIn.title()))
-                    .map(edgeIn -> {
-                        float totalCost = current.totalCost();
-                        if (isWalking) {
-                            // Round up if walking stops
-                            final boolean isGoingToWalk = edgeIn.title().startsWith(GraphBuilder.WALK_PREFIX);
-                            if (!isGoingToWalk) {
-                                totalCost = (float) Math.ceil(totalCost);
-                            }
-                        }
-                        totalCost += edgeIn.cost();
-                        return new DijkstraQueueEntry(edgeIn.from(), current, edgeIn.title(), totalCost);
-                    })
-                    .forEachOrdered(open_list::add);
+            // Add predecessors of vertex to openList
+            for (GraphEdge edge : currentVertex.edgesIn()) {
+                if (!blacklist.contains(edge.title())) {
+                    openList.enqueue(edge, currentEntry);
+                }
+            }
 
-            // Add teleports going here to open_list
-            final List<Teleport> teleportsHere = this.teleports.get(current.vertex().coordinate());
+
+            // Add teleports going here to openList
+            final List<Teleport> teleportsHere = this.teleports.get(currentVertex);
             if (teleportsHere != null) {
-                teleportsHere.stream()
-                        .filter(teleport -> !blacklist.contains(teleport.title()))
-                        .map(teleport -> {
-                            float totalCost = current.totalCost();
-                            if (isWalking) {
-                                totalCost = (float) Math.ceil(totalCost);
-                            }
-                            totalCost += teleport.cost();
-                            return new DijkstraQueueEntry(
-                                    graph.vertices().get(start),
-                                    current,
-                                    teleport.title(),
-                                    totalCost);
-                        })
-                        .forEachOrdered(open_list::add);
+                for (Teleport teleportHere : teleportsHere) {
+                    if (!blacklist.contains(teleportHere.title())) {
+                        // Enqueue a new edge where the teleport originates from the start vertex
+                        openList.enqueue(new GraphEdgeImpl(start, teleportHere.to(), teleportHere.cost(), teleportHere.title(), teleportHere.isWalking()), currentEntry);
+                    }
+                }
             }
         }
 
         // No path found
-        return new PathfinderResult(false, null, 0, System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
+        return new PartialPathfinderResult(
+                false,
+                null,
+                0,
+                closedList.size(),
+                openList.size());
 
     }
 
-    private List<PathfinderResult.Movement> backtrack(DijkstraQueueEntry start) {
-        List<PathfinderResult.Movement> path = new LinkedList<>();
-        path.add(new PathfinderResult.Movement(start.vertex().coordinate(), "start"));
+    private List<PathfinderResult.Movement> backtrack(PathfindingQueue.Entry start) {
+        List<PathfinderResult.Movement> path = new ArrayList<>();
 
-        DijkstraQueueEntry current = start;
-        while (!current.isEnd()) {
-            path.add(new PathfinderResult.Movement(current.successor().vertex().coordinate(), current.methodOfMovement()));
-            current = current.successor();
+        path.add(new PathfinderResult.Movement(start.edge().from().coordinate(), Pathfinder.MOVEMENT_START_TITLE));
+
+        PathfindingQueue.Entry current = start;
+        while (current.previous() != null) {
+            path.add(new PathfinderResult.Movement(current.edge().to().coordinate(), current.edge().title()));
+            current = current.previous();
         }
 
         return path;
-    }
-
-
-    private record DijkstraQueueEntry(
-            GraphVertex vertex,
-            DijkstraQueueEntry successor,
-            String methodOfMovement,
-            float totalCost)
-
-            implements Comparable<DijkstraQueueEntry> {
-
-        public boolean isEnd() {
-            return this.successor == null;
-        }
-
-        @Override
-        public int compareTo(final DijkstraQueueEntry o) {
-            return Float.compare(this.totalCost, o.totalCost);
-        }
     }
 }

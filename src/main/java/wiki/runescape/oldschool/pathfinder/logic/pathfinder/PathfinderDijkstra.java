@@ -27,30 +27,14 @@ public class PathfinderDijkstra extends Pathfinder {
     }
 
     @Override
-    public PathfinderResult findPath(Coordinate start, Coordinate end, Set<String> blacklist) {
-        final long startTime = System.currentTimeMillis();
-
-        final GraphVertex startVertex = this.graph.vertices().get(start);
-        assert (startVertex != null);
-        assert (this.graph.vertices().get(end) != null);
-
-        // if start == end, return
-        if (start.equals(end)) {
-            return new PathfinderResult(
-                    true,
-                    List.of(new PathfinderResult.Movement(start, "start")),
-                    0,
-                    System.currentTimeMillis() - startTime,
-                    0,
-                    0);
-        }
-
-        // Init openList and closedList
+    public PartialPathfinderResult findPath(GraphVertex start, GraphVertex end, Set<String> blacklist) {
         final Set<Coordinate> closedList = new HashSet<>();
-        final PathfindingQueue openList = new PathfindingPriorityQueue(startVertex);
+        final PathfindingQueue openList = new PathfindingPriorityQueue();
+        openList.enqueue(new GraphEdgeImpl(null, start, 0, Pathfinder.MOVEMENT_START_TITLE, false), null);
 
         boolean addedTeleports20To30Wildy = false;
         boolean addedTeleportsTo20Wildy = false;
+
         while (openList.hasNext()) {
             final PathfindingQueue.Entry currentEntry = openList.dequeue();
             final GraphVertex currentVertex = currentEntry.edge().to();
@@ -61,12 +45,11 @@ public class PathfinderDijkstra extends Pathfinder {
             closedList.add(currentVertex.coordinate());
 
             // Goal found?
-            if (currentVertex.coordinate().equals(end)) {
-                return new PathfinderResult(
+            if (currentVertex.equals(end)) {
+                return new PartialPathfinderResult(
                         true,
                         this.backtrack(currentEntry),
                         (int) Math.ceil(currentEntry.totalCost()),
-                        System.currentTimeMillis() - startTime,
                         closedList.size(),
                         openList.size());
             }
@@ -100,7 +83,7 @@ public class PathfinderDijkstra extends Pathfinder {
         }
 
         // No Path found
-        return new PathfinderResult(false, null, 0, System.currentTimeMillis() - startTime, closedList.size(), openList.size());
+        return new PartialPathfinderResult(false, null, 0, closedList.size(), openList.size());
     }
 
     private List<PathfinderResult.Movement> backtrack(PathfindingQueue.Entry end) {

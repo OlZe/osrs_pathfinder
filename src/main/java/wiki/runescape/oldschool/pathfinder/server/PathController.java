@@ -11,7 +11,6 @@ import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderResult;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -30,14 +29,13 @@ public class PathController {
 
     @PostMapping("api/path.json")
     public PathfinderResult getPath(@RequestBody FindPathRequest pathRequest) {
-        if (!this.graph.isWalkable(pathRequest.from()) || !this.graph.isWalkable(pathRequest.to())) {
-            return new PathfinderResult(false, null, 0, 0, 0, 0);
-        }
 
         final Pathfinder pathFinder = ALGORITHM_STRING_TO_CLASS.get(pathRequest.algorithm());
+
         if (pathFinder == null) {
-            throw new IllegalArgumentException("Field 'algorithm' of request contains invalid value: " + pathRequest.algorithm() +
-                    "\nAllowed values are: " + ALGORITHM_STRING_TO_CLASS.keySet().stream().collect(Collectors.joining(", ")));
+            final String errorMsg = "Field 'algorithm' of request contains invalid value: " + pathRequest.algorithm() +
+                    "\nAllowed values are: " + String.join(", ", ALGORITHM_STRING_TO_CLASS.keySet());
+            return new PathfinderResult(false, null, 0, 0, 0, 0, errorMsg);
         }
 
         return pathFinder.findPath(pathRequest.from(), pathRequest.to(), pathRequest.blacklist());

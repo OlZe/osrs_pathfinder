@@ -47,7 +47,9 @@ public record GraphVertex(
         return "[" + this.coordinate.toString() + "->" + neighbours + "]";
     }
 
-    // Override because default implementation checks if all neighbours, and their neighbours etc., are equal
+    /**
+     * Compares using their coordinate
+     */
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
@@ -56,7 +58,9 @@ public record GraphVertex(
         return Objects.equals(coordinate, that.coordinate);
     }
 
-    // Override because default implementation tries to hash all neighbours, and their neighbours etc.
+    /**
+     * Hashes this coordinate
+     */
     @Override
     public int hashCode() {
         return Objects.hash(coordinate);

@@ -9,7 +9,8 @@ public record PathfinderResult(boolean pathFound,
                                int totalCost,
                                long computeTimeMs,
                                int amountExpandedVertices,
-                               int amountVerticesLeftInQueue) {
+                               int amountVerticesLeftInQueue,
+                               String reasonForNoPathFound) {
 
     public record Movement(Coordinate destination,
                            String methodOfMovement) {
