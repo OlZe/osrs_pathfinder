@@ -45,5 +45,10 @@ public class PathController {
     public Collection<String> getAllTransportsTeleports() {
         return this.graph.getAllTeleportsTransports();
     }
+
+    @GetMapping("api/algorithms.json")
+    public Collection<String> getAllAlgorithms() {
+        return ALGORITHM_STRING_TO_CLASS.keySet();
+    }
 }
 
