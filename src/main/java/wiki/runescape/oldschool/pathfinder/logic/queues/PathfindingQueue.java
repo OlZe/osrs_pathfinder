@@ -14,12 +14,12 @@ public interface PathfindingQueue {
 
     record Entry(GraphEdge edge,
                  Entry previous,
-                 float totalCost)
+                 int totalCostX2)
             implements Comparable<Entry> {
 
         @Override
         public int compareTo(final Entry o) {
-            return Float.compare(this.totalCost, o.totalCost);
+            return this.totalCostX2 - o.totalCostX2;
         }
     }
 }

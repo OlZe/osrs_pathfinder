@@ -52,16 +52,16 @@ public class GraphBuilder {
 
     private Collection<Teleport> makeTeleports(final Map<Coordinate, GraphVertex> graphVertices, final Collection<TeleportJson> teleportsJson) {
         List<Teleport> teleports = new LinkedList<>();
-        for(TeleportJson teleportJson : teleportsJson) {
+        for (TeleportJson teleportJson : teleportsJson) {
             final GraphVertex to = graphVertices.get(teleportJson.to());
-            if(to == null) {
+            if (to == null) {
                 logger.warn("Vertex for Teleport " + teleportJson + " does not exist in graph");
                 continue;
             }
             teleports.add(new Teleport(
                     to,
                     teleportJson.title(),
-                    teleportJson.duration(),
+                    2 * teleportJson.duration(),
                     teleportJson.canTeleportUpTo30Wildy()
             ));
         }
@@ -91,15 +91,15 @@ public class GraphBuilder {
             // North
             final GraphVertex northVertex = graph.get(coordinate.moveNorth());
             if (northVertex != null && this.canMoveNorth(coordinate, tileMap)) {
-                vertex.addEdgeTo(northVertex, 0.5f , WALK_NORTH, true);
-                northVertex.addEdgeTo(vertex, 0.5f, WALK_SOUTH, true);
+                vertex.addEdgeTo(northVertex, 1, WALK_NORTH, true);
+                northVertex.addEdgeTo(vertex, 1, WALK_SOUTH, true);
             }
 
             // East
             final GraphVertex eastVertex = graph.get(coordinate.moveEast());
             if (eastVertex != null && this.canMoveEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(eastVertex, 0.5f, WALK_EAST, true);
-                eastVertex.addEdgeTo(vertex, 0.5f, WALK_WEST, true);
+                vertex.addEdgeTo(eastVertex, 1, WALK_EAST, true);
+                eastVertex.addEdgeTo(vertex, 1, WALK_WEST, true);
             }
         });
 
@@ -111,15 +111,15 @@ public class GraphBuilder {
             // North East
             final GraphVertex northEastVertex = graph.get(coordinate.moveNorth().moveEast());
             if (northEastVertex != null && this.canMoveNorthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(northEastVertex, 0.5f, WALK_NORTH_EAST, true);
-                northEastVertex.addEdgeTo(vertex, 0.5f, WALK_SOUTH_WEST, true);
+                vertex.addEdgeTo(northEastVertex, 1, WALK_NORTH_EAST, true);
+                northEastVertex.addEdgeTo(vertex, 1, WALK_SOUTH_WEST, true);
             }
 
             // South East
             final GraphVertex southEastVertex = graph.get(coordinate.moveSouth().moveEast());
             if (southEastVertex != null && this.canMoveSouthEast(coordinate, tileMap)) {
-                vertex.addEdgeTo(southEastVertex, 0.5f, WALK_SOUTH_EAST, true);
-                southEastVertex.addEdgeTo(vertex, 0.5f, WALK_NORTH_WEST, true);
+                vertex.addEdgeTo(southEastVertex, 1, WALK_SOUTH_EAST, true);
+                southEastVertex.addEdgeTo(vertex, 1, WALK_NORTH_WEST, true);
             }
         });
 
@@ -148,12 +148,12 @@ public class GraphBuilder {
                     .findAny();
 
             if (duplicateEdge.isPresent()) {
-                this.logger.warn("Duplicate edge " + fromVertex.coordinate() + "->" + toVertex.coordinate() + ": "
-                        + "Existing edge: '" + duplicateEdge.get().title() + "' cost " + duplicateEdge.get().cost() + "; "
+                this.logger.warn("Duplicate edge " + fromVertex.coordinate() + " -> " + toVertex.coordinate() + ": "
+                        + "Existing edge: '" + duplicateEdge.get().title() + "' cost " + (duplicateEdge.get().costX2() / 2) + "; "
                         + "Ignoring new edge: '" + transport.title() + "' cost " + transport.duration() + ".");
                 return;
             }
-            fromVertex.addEdgeTo(toVertex, transport.duration(), transport.title(), false);
+            fromVertex.addEdgeTo(toVertex, 2 * transport.duration(), transport.title(), false);
         });
     }
 

@@ -5,8 +5,8 @@ import wiki.runescape.oldschool.pathfinder.logic.graph.Graph;
 import wiki.runescape.oldschool.pathfinder.logic.graph.GraphVertex;
 import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderResult.Movement;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public abstract class Pathfinder {
 
@@ -18,7 +18,7 @@ public abstract class Pathfinder {
         this.graph = graph;
     }
 
-    public PathfinderResult findPath(Coordinate start, Coordinate end, Set<String> blacklist) {
+    public PathfinderResult findPath(Coordinate start, Coordinate end, HashSet<String> blacklist) {
         final long startTime = System.currentTimeMillis();
 
         // if start == end, return
@@ -61,10 +61,15 @@ public abstract class Pathfinder {
 
         // Find path
         final PartialPathfinderResult result = this.findPath(startVertex, endVertex, blacklist);
+
+        // Remove the 2x factor out of the total cost to return the real total cost
+        // If the total cost is not evenly divisible by 2 then the path ended on a walking step (cost: half) and needs to be rounded up
+        final int totalCost = (result.totalCostX2() % 2 != 0) ? ((result.totalCostX2() + 1) / 2)  : (result.totalCostX2() / 2);
+
         return new PathfinderResult(
                 result.pathFound(),
                 result.path(),
-                result.totalCost(),
+                totalCost,
                 System.currentTimeMillis() - startTime,
                 result.amountExpandedVertices(),
                 result.amountVerticesLeftInQueue(),
@@ -73,11 +78,11 @@ public abstract class Pathfinder {
     }
 
 
-    protected abstract PartialPathfinderResult findPath(GraphVertex start, GraphVertex end, Set<String> blacklist);
+    protected abstract PartialPathfinderResult findPath(GraphVertex start, GraphVertex end, HashSet<String> blacklist);
 
     protected record PartialPathfinderResult(boolean pathFound,
                                              List<Movement> path,
-                                             int totalCost,
+                                             int totalCostX2,
                                              int amountExpandedVertices,
                                              int amountVerticesLeftInQueue) {
     }

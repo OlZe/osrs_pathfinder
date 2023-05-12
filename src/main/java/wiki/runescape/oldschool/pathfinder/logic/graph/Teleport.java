@@ -2,7 +2,7 @@ package wiki.runescape.oldschool.pathfinder.logic.graph;
 
 public record Teleport(GraphVertex to,
                        String title,
-                       float cost,
+                       int costX2,
                        boolean canTeleportUpTo30Wildy)
         implements GraphEdge {
 

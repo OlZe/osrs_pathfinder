@@ -17,9 +17,9 @@ public record GraphVertex(
      * Adds a unidirectional edge from this Vertex to the newNeighbour
      * @param newNeighbour The new neighbour
      */
-    public void addEdgeTo(GraphVertex newNeighbour, float cost, String methodOfMovement, boolean isWalking) {
+    public void addEdgeTo(GraphVertex newNeighbour, int costX2, String methodOfMovement, boolean isWalking) {
         assert !newNeighbour.equals(this);
-        final GraphEdge newEdge = new GraphEdgeImpl(this, newNeighbour, cost, methodOfMovement, isWalking);
+        final GraphEdge newEdge = new GraphEdgeImpl(this, newNeighbour, costX2, methodOfMovement, isWalking);
         this.edgesOut.add(newEdge);
         newNeighbour.edgesIn.add(newEdge);
     }

@@ -20,7 +20,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
     }
 
     @Override
-    public PartialPathfinderResult findPath(final GraphVertex start, final GraphVertex end, final Set<String> blacklist) {
+    public PartialPathfinderResult findPath(final GraphVertex start, final GraphVertex end, final HashSet<String> blacklist) {
         final Set<GraphVertex> closedList = new HashSet<>();
         final PathfindingQueue openList = new PathfindingPriorityQueue();
         openList.enqueue(new GraphEdgeImpl(end, null, 0, "end", false), null);
@@ -39,7 +39,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
                 return new PartialPathfinderResult(
                         true,
                         this.backtrack(currentEntry),
-                        (int) Math.ceil(currentEntry.totalCost()),
+                        currentEntry.totalCostX2(),
                         closedList.size(),
                         openList.size());
             }
@@ -59,7 +59,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
                 for (Teleport teleportHere : teleportsHere) {
                     if (!blacklist.contains(teleportHere.title())) {
                         // Enqueue a new edge where the teleport originates from the start vertex
-                        openList.enqueue(new GraphEdgeImpl(start, teleportHere.to(), teleportHere.cost(), teleportHere.title(), teleportHere.isWalking()), currentEntry);
+                        openList.enqueue(new GraphEdgeImpl(start, teleportHere.to(), teleportHere.costX2(), teleportHere.title(), teleportHere.isWalking()), currentEntry);
                     }
                 }
             }

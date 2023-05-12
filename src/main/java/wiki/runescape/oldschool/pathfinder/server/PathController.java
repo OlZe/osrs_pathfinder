@@ -33,8 +33,9 @@ public class PathController {
         final Pathfinder pathFinder = ALGORITHM_STRING_TO_CLASS.get(pathRequest.algorithm());
 
         if (pathFinder == null) {
-            final String errorMsg = "Field 'algorithm' of request contains invalid value: " + pathRequest.algorithm() +
-                    "\nAllowed values are: " + String.join(", ", ALGORITHM_STRING_TO_CLASS.keySet());
+            final String errorMsg = "Field 'algorithm' of request contains invalid value: "
+                    + pathRequest.algorithm() + "\nAllowed values are: "
+                    + String.join(", ", ALGORITHM_STRING_TO_CLASS.keySet());
             return new PathfinderResult(false, null, 0, 0, 0, 0, errorMsg);
         }
 

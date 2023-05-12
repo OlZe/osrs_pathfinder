@@ -8,17 +8,19 @@ public class PathfindingPriorityQueue implements PathfindingQueue {
 
     @Override
     public void enqueue(final GraphEdge edge, final Entry previous) {
-        float newTotalCost = edge.cost();
+        int newTotalCostX2 = edge.costX2();
         if(previous != null) {
-            newTotalCost += previous.totalCost();
+            newTotalCostX2 += previous.totalCostX2();
 
             if (!edge.isWalking() && previous.edge().isWalking()) {
                 // Walking stops, round up in case path stops on a half tick
-                newTotalCost = (float) Math.ceil(newTotalCost);
+                if(newTotalCostX2 % 2 != 0) {
+                    newTotalCostX2++;
+                }
             }
         }
 
-        this.queue.add(new Entry(edge, previous, newTotalCost));
+        this.queue.add(new Entry(edge, previous, newTotalCostX2));
     }
 
     @Override

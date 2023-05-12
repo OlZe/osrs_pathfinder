@@ -5,7 +5,7 @@ public interface GraphEdge {
 
     GraphVertex to();
 
-    float cost();
+    int costX2();
 
     String title();
 
