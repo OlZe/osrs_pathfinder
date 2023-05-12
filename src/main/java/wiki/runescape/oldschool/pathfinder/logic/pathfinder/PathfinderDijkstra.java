@@ -65,7 +65,7 @@ public class PathfinderDijkstra extends Pathfinder {
                 return new PathfinderResult(
                         true,
                         this.backtrack(currentEntry),
-                        (int) currentEntry.totalCost(),
+                        (int) Math.ceil(currentEntry.totalCost()),
                         System.currentTimeMillis() - startTime,
                         closedList.size(),
                         openList.size());
