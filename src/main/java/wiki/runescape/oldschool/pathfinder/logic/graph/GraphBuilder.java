@@ -1,4 +1,4 @@
-package wiki.runescape.oldschool.pathfinder.logic;
+package wiki.runescape.oldschool.pathfinder.logic.graph;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,6 +6,7 @@ import wiki.runescape.oldschool.pathfinder.data_deserialization.DataDeserializer
 import wiki.runescape.oldschool.pathfinder.data_deserialization.PositionInfo;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.TeleportJson;
 import wiki.runescape.oldschool.pathfinder.data_deserialization.TransportJson;
+import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
 
 import java.io.IOException;
 import java.util.*;

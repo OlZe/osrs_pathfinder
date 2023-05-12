@@ -1,4 +1,7 @@
-package wiki.runescape.oldschool.pathfinder.logic;
+package wiki.runescape.oldschool.pathfinder.logic.graph;
+
+import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
+import wiki.runescape.oldschool.pathfinder.logic.WildernessLevels;
 
 import java.util.List;
 import java.util.Objects;

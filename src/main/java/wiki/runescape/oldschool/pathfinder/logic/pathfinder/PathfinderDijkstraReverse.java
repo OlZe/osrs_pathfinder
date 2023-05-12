@@ -1,21 +1,29 @@
-package wiki.runescape.oldschool.pathfinder.logic;
+package wiki.runescape.oldschool.pathfinder.logic.pathfinder;
+
+import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
+import wiki.runescape.oldschool.pathfinder.logic.graph.Graph;
+import wiki.runescape.oldschool.pathfinder.logic.graph.GraphBuilder;
+import wiki.runescape.oldschool.pathfinder.logic.graph.GraphVertex;
+import wiki.runescape.oldschool.pathfinder.logic.graph.Teleport;
+import wiki.runescape.oldschool.pathfinder.logic.queues.PriorityQueueTieByTime;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PathFinderDijkstraReverse implements PathFinder {
+public class PathfinderDijkstraReverse extends Pathfinder {
 
     /**
      * Allows efficient query of teleports for a given coordinate.
      */
     private final Map<Coordinate, List<Teleport>> teleports;
 
-    public PathFinderDijkstraReverse(final Collection<Teleport> teleports) {
-        this.teleports = teleports.stream().collect(Collectors.groupingBy(tp -> tp.to().coordinate()));
+    public PathfinderDijkstraReverse(final Graph graph) {
+        super(graph);
+        this.teleports = graph.teleports().stream().collect(Collectors.groupingBy(tp -> tp.to().coordinate()));
     }
 
     @Override
-    public Result findPath(final Graph graph, final Coordinate start, final Coordinate end, final Set<String> blacklist) {
+    public PathfinderResult findPath(final Coordinate start, final Coordinate end, final Set<String> blacklist) {
         final long startTime = System.currentTimeMillis();
 
         // Determine ending position
@@ -27,7 +35,7 @@ public class PathFinderDijkstraReverse implements PathFinder {
 
         // if start == end, return
         if (start.equals(end)) {
-            return new PathFinder.Result(true, this.backtrack(firstQueueEntry), 0, System.currentTimeMillis() - startTime, 0, 0);
+            return new PathfinderResult(true, this.backtrack(firstQueueEntry), 0, System.currentTimeMillis() - startTime, 0, 0);
         }
 
         // Init open_list and closed_list
@@ -49,11 +57,11 @@ public class PathFinderDijkstraReverse implements PathFinder {
             // Start found?
             if (current.vertex().coordinate().equals(start)) {
                 float totalCost = current.totalCost();
-                if(isWalking) {
+                if (isWalking) {
                     // Round up because walking stops
                     totalCost = (float) Math.ceil(totalCost);
                 }
-                return new PathFinder.Result(true, this.backtrack(current), (int) totalCost, System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
+                return new PathfinderResult(true, this.backtrack(current), (int) totalCost, System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
             }
 
 
@@ -96,17 +104,17 @@ public class PathFinderDijkstraReverse implements PathFinder {
         }
 
         // No path found
-        return new PathFinder.Result(false, null, 0, System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
+        return new PathfinderResult(false, null, 0, System.currentTimeMillis() - startTime, closed_list.size(), open_list.size());
 
     }
 
-    private List<Result.Movement> backtrack(DijkstraQueueEntry start) {
-        List<PathFinder.Result.Movement> path = new LinkedList<>();
-        path.add(new Result.Movement(start.vertex().coordinate(), "start"));
+    private List<PathfinderResult.Movement> backtrack(DijkstraQueueEntry start) {
+        List<PathfinderResult.Movement> path = new LinkedList<>();
+        path.add(new PathfinderResult.Movement(start.vertex().coordinate(), "start"));
 
         DijkstraQueueEntry current = start;
         while (!current.isEnd()) {
-            path.add(new Result.Movement(current.successor().vertex().coordinate(), current.methodOfMovement()));
+            path.add(new PathfinderResult.Movement(current.successor().vertex().coordinate(), current.methodOfMovement()));
             current = current.successor();
         }
 

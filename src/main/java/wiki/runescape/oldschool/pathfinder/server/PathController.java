@@ -1,7 +1,12 @@
 package wiki.runescape.oldschool.pathfinder.server;
 
 import org.springframework.web.bind.annotation.*;
-import wiki.runescape.oldschool.pathfinder.logic.*;
+import wiki.runescape.oldschool.pathfinder.logic.graph.Graph;
+import wiki.runescape.oldschool.pathfinder.logic.graph.GraphBuilder;
+import wiki.runescape.oldschool.pathfinder.logic.pathfinder.Pathfinder;
+import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderDijkstra;
+import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderDijkstraReverse;
+import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderResult;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -14,9 +19,9 @@ public class PathController {
 
     private final Graph graph = new GraphBuilder().buildGraph();
 
-    private final Map<String, PathFinder> ALGORITHM_STRING_TO_CLASS = Map.of(
-            "dijkstra", new PathFinderDijkstra(),
-            "dijkstra-reverse", new PathFinderDijkstraReverse(graph.teleports())
+    private final Map<String, Pathfinder> ALGORITHM_STRING_TO_CLASS = Map.of(
+            "dijkstra", new PathfinderDijkstra(graph),
+            "dijkstra-reverse", new PathfinderDijkstraReverse(graph)
     );
 
     public PathController() throws IOException {
@@ -24,18 +29,18 @@ public class PathController {
 
 
     @PostMapping("api/path.json")
-    public PathFinder.Result getPath(@RequestBody FindPathRequest pathRequest) {
+    public PathfinderResult getPath(@RequestBody FindPathRequest pathRequest) {
         if (!this.graph.isWalkable(pathRequest.from()) || !this.graph.isWalkable(pathRequest.to())) {
-            return new PathFinder.Result(false, null, 0, 0, 0, 0);
+            return new PathfinderResult(false, null, 0, 0, 0, 0);
         }
 
-        final PathFinder pathFinder = ALGORITHM_STRING_TO_CLASS.get(pathRequest.algorithm());
+        final Pathfinder pathFinder = ALGORITHM_STRING_TO_CLASS.get(pathRequest.algorithm());
         if (pathFinder == null) {
             throw new IllegalArgumentException("Field 'algorithm' of request contains invalid value: " + pathRequest.algorithm() +
                     "\nAllowed values are: " + ALGORITHM_STRING_TO_CLASS.keySet().stream().collect(Collectors.joining(", ")));
         }
 
-        return pathFinder.findPath(this.graph, pathRequest.from(), pathRequest.to(), pathRequest.blacklist());
+        return pathFinder.findPath(pathRequest.from(), pathRequest.to(), pathRequest.blacklist());
     }
 
     @GetMapping("api/transports-teleports.json")

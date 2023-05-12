@@ -1,4 +1,4 @@
-package wiki.runescape.oldschool.pathfinder.logic;
+package wiki.runescape.oldschool.pathfinder.logic.queues;
 
 import java.util.PriorityQueue;
 

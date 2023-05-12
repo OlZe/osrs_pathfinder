@@ -1,8 +1,11 @@
-package wiki.runescape.oldschool.pathfinder.logic;
+package wiki.runescape.oldschool.pathfinder.logic.graph;
+
+import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
 
 import java.util.*;
 
-public record Graph(Map<Coordinate, GraphVertex> vertices, Collection<Teleport> teleports) {
+public record Graph(Map<Coordinate, GraphVertex> vertices,
+                    Collection<Teleport> teleports) {
 
     /**
      * Empty for faster debugging because IntelliJ would try to represent this huge object as a string and slow down

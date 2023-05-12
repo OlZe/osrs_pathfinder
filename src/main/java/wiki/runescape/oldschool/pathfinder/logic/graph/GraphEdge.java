@@ -1,4 +1,4 @@
-package wiki.runescape.oldschool.pathfinder.logic;
+package wiki.runescape.oldschool.pathfinder.logic.graph;
 
 public interface GraphEdge {
     GraphVertex from();
