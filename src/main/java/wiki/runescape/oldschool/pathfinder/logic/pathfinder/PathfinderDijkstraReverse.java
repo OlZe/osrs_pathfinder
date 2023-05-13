@@ -47,7 +47,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
             // Add predecessors of vertex to openList
             for (GraphEdge edge : currentVertex.edgesIn()) {
-                if (!blacklist.contains(edge.title())) {
+                if (!blacklist.contains(edge.title()) && !closedList.contains(edge.from())) {
                     openList.enqueue(edge, currentEntry);
                 }
             }

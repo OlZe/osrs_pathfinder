@@ -56,7 +56,7 @@ public class PathfinderDijkstra extends Pathfinder {
 
             // Add neighbours of vertex to openList
             for (GraphEdge edge : currentVertex.edgesOut()) {
-                if (!blacklist.contains(edge.title())) {
+                if (!blacklist.contains(edge.title()) && !closedList.contains(edge.to().coordinate())) {
                     openList.enqueue(edge, currentEntry);
                 }
             }
@@ -65,7 +65,7 @@ public class PathfinderDijkstra extends Pathfinder {
             final boolean addTeleports20To30Wildy = !addedTeleports20To30Wildy && !(currentVertex.wildernessLevel().equals(WildernessLevels.ABOVE30));
             if(addTeleports20To30Wildy) {
                 for(Teleport teleport : this.teleports20To30Wildy) {
-                    if(!blacklist.contains(teleport.title())) {
+                    if(!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to().coordinate())) {
                         openList.enqueue(teleport, currentEntry);
                     }
                 }
@@ -74,7 +74,7 @@ public class PathfinderDijkstra extends Pathfinder {
             final boolean addTeleportsTo20Wildy = !addedTeleportsTo20Wildy && currentVertex.wildernessLevel().equals(WildernessLevels.BELOW20);
             if(addTeleportsTo20Wildy) {
                 for (Teleport teleport : this.teleportsTo20Wildy) {
-                    if(!blacklist.contains(teleport.title())) {
+                    if(!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to().coordinate())) {
                         openList.enqueue(teleport, currentEntry);
                     }
                 }
