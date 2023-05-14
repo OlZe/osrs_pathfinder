@@ -29,7 +29,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
         // If stuck in wilderness, return no path found
         final WildernessExits wildernessExits = this.findWildernessExits(start, blacklist);
         if(!wildernessExits.pathsFound()) {
-            return new PartialPathfinderResult(false, null, 0, wildernessExits.amountExpandedVertices, wildernessExits.amountVerticesLeftInQueue());
+            return new PartialPathfinderResult(false, null, 0, wildernessExits.amountExpandedVertices(), wildernessExits.amountVerticesLeftInQueue());
         }
 
         final Set<GraphVertex> closedList = new HashSet<>();
@@ -51,8 +51,8 @@ public class PathfinderDijkstraReverse extends Pathfinder {
                         true,
                         this.makePath(currentEntry, wildernessExits),
                         currentEntry.totalCostX2(),
-                        closedList.size(),
-                        openList.size());
+                        closedList.size() + wildernessExits.amountVerticesLeftInQueue(),
+                        openList.size() + wildernessExits.amountVerticesLeftInQueue());
             }
 
             // Add predecessors of vertex to openList
