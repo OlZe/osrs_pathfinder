@@ -15,13 +15,11 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
     private final Map<GraphVertex, List<Teleport>> teleportsTo30Map;
     private final Map<GraphVertex, List<Teleport>> teleportsTo20Map;
-    private final Collection<Teleport> teleportsTo30;
 
     public PathfinderDijkstraReverse(final Graph graph) {
         super(graph);
         this.teleportsTo30Map = graph.teleports().stream().filter(Teleport::canTeleportUpTo30Wildy).collect(Collectors.groupingBy(Teleport::to));
         this.teleportsTo20Map = graph.teleports().stream().filter(tp -> !tp.canTeleportUpTo30Wildy()).collect(Collectors.groupingBy(Teleport::to));
-        this.teleportsTo30 = graph.teleports().stream().filter(Teleport::canTeleportUpTo30Wildy).collect(Collectors.toList());
     }
 
     @Override
@@ -178,10 +176,13 @@ public class PathfinderDijkstraReverse extends Pathfinder {
                             currentEntry.edge().isWalking());
 
                     // Add lvl 30 wildy teleports
-                    for (Teleport teleport : this.teleportsTo30) {
-                        if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to())) {
-                            openList.enqueue(teleport, currentEntry);
+                    for (List<Teleport> teleportsTo30 : this.teleportsTo30Map.values()) {
+                        for (Teleport teleportTo30 : teleportsTo30) {
+                            if (!blacklist.contains(teleportTo30.title()) && !closedList.contains(teleportTo30.to())) {
+                                openList.enqueue(teleportTo30, currentEntry);
+                            }
                         }
+
                     }
                 }
             }
