@@ -27,7 +27,7 @@ public class PathfinderDijkstra extends Pathfinder {
     }
 
     @Override
-    public PartialPathfinderResult findPath(GraphVertex start, GraphVertex end, HashSet<String> blacklist) {
+    protected PartialPathfinderResult findPath(GraphVertex start, GraphVertex end, HashSet<String> blacklist) {
         final Set<Coordinate> closedList = new HashSet<>();
         final PathfindingQueue openList = new PathfindingPriorityQueue();
         openList.enqueue(new GraphEdgeImpl(null, start, 0, Pathfinder.MOVEMENT_START_TITLE, false), null);
