@@ -61,10 +61,10 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
             // If a wilderness-exit has been reached, enqueue a phantom edge from startVertex to wildernessExit
             if (currentVertex.equals(wildernessExits.exitTo30().exitVertex())) {
-                openList.enqueue(new GraphEdgeImpl(start, currentVertex, wildernessExits.exitTo30().totalCostX2(), "exit30", false), currentEntry);
+                openList.enqueue(new GraphEdgeImpl(start, currentVertex, wildernessExits.exitTo30().totalCostX2(), "exit30", wildernessExits.exitTo30().isWalking()), currentEntry);
             }
             if (currentVertex.equals(wildernessExits.exitTo20().exitVertex())) {
-                openList.enqueue(new GraphEdgeImpl(start, currentVertex, wildernessExits.exitTo20().totalCostX2(), "exit20", false), currentEntry);
+                openList.enqueue(new GraphEdgeImpl(start, currentVertex, wildernessExits.exitTo20().totalCostX2(), "exit20", wildernessExits.exitTo20().isWalking()), currentEntry);
             }
 
             // If a teleport goes here, enqueue a phantom edge representing the teleport originating from its corresponding wilderness exit
@@ -124,8 +124,8 @@ public class PathfinderDijkstraReverse extends Pathfinder {
         if(start.wildernessLevel() == WildernessLevels.BELOW20) {
             return new WildernessExits(
                     true,
-                    new WildernessExits.WildernessExit(List.of(new PathfinderResult.Movement(start.coordinate(), Pathfinder.MOVEMENT_START_TITLE)), start, 0),
-                    new WildernessExits.WildernessExit(List.of(new PathfinderResult.Movement(start.coordinate(), Pathfinder.MOVEMENT_START_TITLE)), start, 0),
+                    new WildernessExits.WildernessExit(List.of(new PathfinderResult.Movement(start.coordinate(), Pathfinder.MOVEMENT_START_TITLE)), start, 0, false),
+                    new WildernessExits.WildernessExit(List.of(new PathfinderResult.Movement(start.coordinate(), Pathfinder.MOVEMENT_START_TITLE)), start, 0, false),
                     0,
                     0);
         }
@@ -152,7 +152,8 @@ public class PathfinderDijkstraReverse extends Pathfinder {
                 pathTo20 = new WildernessExits.WildernessExit(
                         this.backtrackWildernessExit(currentEntry),
                         currentVertex,
-                        currentEntry.totalCostX2());
+                        currentEntry.totalCostX2(),
+                        currentEntry.edge().isWalking());
 
                 if (pathTo30 == null) {
                     pathTo30 = pathTo20;
@@ -170,7 +171,8 @@ public class PathfinderDijkstraReverse extends Pathfinder {
                     pathTo30 = new WildernessExits.WildernessExit(
                             this.backtrackWildernessExit(currentEntry),
                             currentVertex,
-                            currentEntry.totalCostX2());
+                            currentEntry.totalCostX2(),
+                            currentEntry.edge().isWalking());
 
                     // Add lvl 30 wildy teleports
                     for (Teleport teleport : this.teleportsTo30) {
@@ -214,7 +216,8 @@ public class PathfinderDijkstraReverse extends Pathfinder {
         private record WildernessExit(
                 List<PathfinderResult.Movement> path,
                 GraphVertex exitVertex,
-                int totalCostX2
+                int totalCostX2,
+                boolean isWalking
         ) {
         }
     }
