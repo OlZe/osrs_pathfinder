@@ -71,17 +71,21 @@ public class PathfinderDijkstraReverse extends Pathfinder {
             // If a teleport goes here, enqueue a phantom edge representing the teleport originating from its corresponding wilderness exit
             final List<Teleport> teleportsUpTo30Here = this.teleportsTo30Map.get(currentVertex);
             if (teleportsUpTo30Here != null) {
-                for (Teleport teleportHere : teleportsUpTo30Here) {
-                    if (!blacklist.contains(teleportHere.title())) {
-                        openList.enqueue(new GraphEdgeImpl(wildernessExits.exitTo30().exitVertex(), teleportHere.to(), teleportHere.costX2(), teleportHere.title(), teleportHere.isWalking()), currentEntry);
+                if (!closedList.contains(wildernessExits.exitTo30().exitVertex())) {
+                    for (Teleport teleportHere : teleportsUpTo30Here) {
+                        if (!blacklist.contains(teleportHere.title())) {
+                            openList.enqueue(new GraphEdgeImpl(wildernessExits.exitTo30().exitVertex(), teleportHere.to(), teleportHere.costX2(), teleportHere.title(), teleportHere.isWalking()), currentEntry);
+                        }
                     }
                 }
             }
             final List<Teleport> teleportsUpTo20Here = this.teleportsTo20Map.get(currentVertex);
             if (teleportsUpTo20Here != null) {
-                for (Teleport teleportHere : teleportsUpTo20Here) {
-                    if (!blacklist.contains(teleportHere.title())) {
-                        openList.enqueue(new GraphEdgeImpl(wildernessExits.exitTo20().exitVertex(), teleportHere.to(), teleportHere.costX2(), teleportHere.title(), teleportHere.isWalking()), currentEntry);
+                if(!closedList.contains(wildernessExits.exitTo20().exitVertex())){
+                    for (Teleport teleportHere : teleportsUpTo20Here) {
+                        if (!blacklist.contains(teleportHere.title())) {
+                            openList.enqueue(new GraphEdgeImpl(wildernessExits.exitTo20().exitVertex(), teleportHere.to(), teleportHere.costX2(), teleportHere.title(), teleportHere.isWalking()), currentEntry);
+                        }
                     }
                 }
             }
