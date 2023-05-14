@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 
 public class PathfinderDijkstraReverse extends Pathfinder {
 
+    private static final String PHANTOM_EDGE_WILDY_EXIT_30_TITLE = "exit30";
+    private static final String PHANTOM_EDGE_WILDY_EXIT_20_TITLE = "exit20";
+
     private final Map<GraphVertex, List<Teleport>> teleportsTo30Map;
     private final Map<GraphVertex, List<Teleport>> teleportsTo20Map;
     private final Collection<Teleport> teleportsTo30;
@@ -61,10 +64,10 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
             // If a wilderness-exit has been reached, enqueue a phantom edge from startVertex to wildernessExit
             if (currentVertex.equals(wildernessExits.exitTo30().exitVertex())) {
-                openList.enqueue(new GraphEdgeImpl(start, currentVertex, wildernessExits.exitTo30().totalCostX2(), "exit30", wildernessExits.exitTo30().isWalking()), currentEntry);
+                openList.enqueue(new GraphEdgeImpl(start, currentVertex, wildernessExits.exitTo30().totalCostX2(), PHANTOM_EDGE_WILDY_EXIT_30_TITLE, wildernessExits.exitTo30().isWalking()), currentEntry);
             }
             if (currentVertex.equals(wildernessExits.exitTo20().exitVertex())) {
-                openList.enqueue(new GraphEdgeImpl(start, currentVertex, wildernessExits.exitTo20().totalCostX2(), "exit20", wildernessExits.exitTo20().isWalking()), currentEntry);
+                openList.enqueue(new GraphEdgeImpl(start, currentVertex, wildernessExits.exitTo20().totalCostX2(), PHANTOM_EDGE_WILDY_EXIT_20_TITLE, wildernessExits.exitTo20().isWalking()), currentEntry);
             }
 
             // If a teleport goes here, enqueue a phantom edge representing the teleport originating from its corresponding wilderness exit
@@ -100,11 +103,11 @@ public class PathfinderDijkstraReverse extends Pathfinder {
         List<PathfinderResult.Movement> path = new ArrayList<>();
         PathfindingQueue.Entry current = start;
 
-        if(current.edge().title().equals("exit30")) {
+        if(current.edge().title().equals(PHANTOM_EDGE_WILDY_EXIT_30_TITLE)) {
             path.addAll(wildernessExits.exitTo30().path());
             current = current.previous();
         }
-        else if(start.edge().title().equals("exit20")) {
+        else if(start.edge().title().equals(PHANTOM_EDGE_WILDY_EXIT_20_TITLE)) {
             path.addAll(wildernessExits.exitTo20().path());
             current = current.previous();
         }
