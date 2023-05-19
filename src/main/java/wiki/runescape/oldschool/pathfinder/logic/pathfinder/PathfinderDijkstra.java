@@ -3,7 +3,6 @@ package wiki.runescape.oldschool.pathfinder.logic.pathfinder;
 import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
 import wiki.runescape.oldschool.pathfinder.logic.WildernessLevels;
 import wiki.runescape.oldschool.pathfinder.logic.graph.*;
-import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingPriorityQueue;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueue;
 
 import java.util.*;
@@ -11,16 +10,17 @@ import java.util.*;
 public class PathfinderDijkstra extends Pathfinder {
     private final Collection<Teleport> teleports20To30Wildy;
     private final Collection<Teleport> teleportsTo20Wildy;
+    private final Class<? extends PathfindingQueue> queueClass;
 
-    public PathfinderDijkstra(Graph graph) {
+    public PathfinderDijkstra(Graph graph, Class<? extends PathfindingQueue> queueClass) {
         super(graph);
+        this.queueClass = queueClass;
         this.teleports20To30Wildy = new ArrayList<>();
         this.teleportsTo20Wildy = new ArrayList<>();
         graph.teleports().forEach(teleport -> {
-            if(teleport.canTeleportUpTo30Wildy()) {
+            if (teleport.canTeleportUpTo30Wildy()) {
                 this.teleports20To30Wildy.add(teleport);
-            }
-            else {
+            } else {
                 this.teleportsTo20Wildy.add(teleport);
             }
         });
@@ -29,7 +29,7 @@ public class PathfinderDijkstra extends Pathfinder {
     @Override
     protected PartialPathfinderResult findPath(GraphVertex start, GraphVertex end, HashSet<String> blacklist) {
         final Set<Coordinate> closedList = new HashSet<>();
-        final PathfindingQueue openList = new PathfindingPriorityQueue();
+        final PathfindingQueue openList = instantiatePathfindingQueue();
         openList.enqueue(new GraphEdgeImpl(null, start, 0, Pathfinder.MOVEMENT_START_TITLE, false), null);
 
         boolean addedTeleports20To30Wildy = false;
@@ -63,18 +63,18 @@ public class PathfinderDijkstra extends Pathfinder {
 
             // If teleports haven't been added, add them to openList, depending on wildy level
             final boolean addTeleports20To30Wildy = !addedTeleports20To30Wildy && !(currentVertex.wildernessLevel().equals(WildernessLevels.ABOVE30));
-            if(addTeleports20To30Wildy) {
-                for(Teleport teleport : this.teleports20To30Wildy) {
-                    if(!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to().coordinate())) {
+            if (addTeleports20To30Wildy) {
+                for (Teleport teleport : this.teleports20To30Wildy) {
+                    if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to().coordinate())) {
                         openList.enqueue(teleport, currentEntry);
                     }
                 }
                 addedTeleports20To30Wildy = true;
             }
             final boolean addTeleportsTo20Wildy = !addedTeleportsTo20Wildy && currentVertex.wildernessLevel().equals(WildernessLevels.BELOW20);
-            if(addTeleportsTo20Wildy) {
+            if (addTeleportsTo20Wildy) {
                 for (Teleport teleport : this.teleportsTo20Wildy) {
-                    if(!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to().coordinate())) {
+                    if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to().coordinate())) {
                         openList.enqueue(teleport, currentEntry);
                     }
                 }
@@ -96,5 +96,13 @@ public class PathfinderDijkstra extends Pathfinder {
         }
 
         return path;
+    }
+
+    private PathfindingQueue instantiatePathfindingQueue() {
+        try {
+            return this.queueClass.getConstructor().newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Could not instantiate PathfindingQueue - Class: " + this.queueClass.toString(), e);
+        }
     }
 }

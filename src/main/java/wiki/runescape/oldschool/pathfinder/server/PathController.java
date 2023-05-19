@@ -7,6 +7,8 @@ import wiki.runescape.oldschool.pathfinder.logic.pathfinder.Pathfinder;
 import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderDijkstra;
 import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderDijkstraReverse;
 import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderResult;
+import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingBucketQueue;
+import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingPriorityQueue;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -19,8 +21,9 @@ public class PathController {
     private final Graph graph = new GraphBuilder().buildGraph();
 
     private final Map<String, Pathfinder> ALGORITHM_STRING_TO_CLASS = Map.of(
-            "dijkstra", new PathfinderDijkstra(graph),
-            "dijkstra-reverse", new PathfinderDijkstraReverse(graph)
+            "Dijkstra/PriorityQueue", new PathfinderDijkstra(graph, PathfindingPriorityQueue.class),
+            "Dijkstra/BucketQueue", new PathfinderDijkstra(graph, PathfindingBucketQueue.class),
+            "ReverseDijkstra/PriorityQueue", new PathfinderDijkstraReverse(graph)
     );
 
     public PathController() throws IOException {
