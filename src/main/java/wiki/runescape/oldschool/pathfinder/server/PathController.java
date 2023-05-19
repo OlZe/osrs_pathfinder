@@ -7,6 +7,7 @@ import wiki.runescape.oldschool.pathfinder.logic.pathfinder.Pathfinder;
 import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderDijkstra;
 import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderDijkstraReverse;
 import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderResult;
+import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingArrayQueue;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingBucketQueue;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingPriorityQueue;
 
@@ -23,8 +24,10 @@ public class PathController {
     private final Map<String, Pathfinder> ALGORITHM_STRING_TO_CLASS = Map.of(
             "Dijkstra / PriorityQueue", new PathfinderDijkstra(graph, PathfindingPriorityQueue.class),
             "Dijkstra / BucketQueue", new PathfinderDijkstra(graph, PathfindingBucketQueue.class),
+            "Dijkstra / ArrayQueue", new PathfinderDijkstra(graph, PathfindingArrayQueue.class),
             "ReverseDijkstra / PriorityQueue", new PathfinderDijkstraReverse(graph, PathfindingPriorityQueue.class),
-            "ReverseDijkstra / BucketQueue", new PathfinderDijkstraReverse(graph, PathfindingBucketQueue.class)
+            "ReverseDijkstra / BucketQueue", new PathfinderDijkstraReverse(graph, PathfindingBucketQueue.class),
+            "ReverseDijkstra / ArrayQueue", new PathfinderDijkstraReverse(graph, PathfindingArrayQueue.class)
     );
 
     public PathController() throws IOException {

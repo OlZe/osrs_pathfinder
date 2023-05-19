@@ -6,7 +6,7 @@ import java.util.PriorityQueue;
  * Provides a PriorityQueue where ties are broken by the time in which they have been inserted
  * Example: Inputting Objects A,B,C,D (same weight) will always return A,B,C,D instead of eg A,C,D,B
  */
-public class PriorityQueueTieByTime<E extends Comparable<E>> {
+class PriorityQueueTieByTime<E extends Comparable<E>> {
     private final PriorityQueue<QueueEntry<E>> queue = new PriorityQueue<>();
     private int elementsInserted = 0;
 
