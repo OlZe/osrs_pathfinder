@@ -2,7 +2,6 @@ package wiki.runescape.oldschool.pathfinder.logic.pathfinder;
 
 import wiki.runescape.oldschool.pathfinder.logic.WildernessLevels;
 import wiki.runescape.oldschool.pathfinder.logic.graph.*;
-import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingPriorityQueue;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueue;
 
 import java.util.*;
@@ -15,11 +14,13 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
     private final Map<GraphVertex, List<Teleport>> teleportsTo30Map;
     private final Map<GraphVertex, List<Teleport>> teleportsTo20Map;
+    private final Class<? extends PathfindingQueue> queueClass;
 
-    public PathfinderDijkstraReverse(final Graph graph) {
+    public PathfinderDijkstraReverse(final Graph graph, final Class<? extends PathfindingQueue> queueClass) {
         super(graph);
         this.teleportsTo30Map = graph.teleports().stream().filter(Teleport::canTeleportUpTo30Wildy).collect(Collectors.groupingBy(Teleport::to));
         this.teleportsTo20Map = graph.teleports().stream().filter(tp -> !tp.canTeleportUpTo30Wildy()).collect(Collectors.groupingBy(Teleport::to));
+        this.queueClass = queueClass;
     }
 
     @Override
@@ -31,7 +32,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
         }
 
         final Set<GraphVertex> closedList = new HashSet<>();
-        final PathfindingQueue openList = new PathfindingPriorityQueue();
+        final PathfindingQueue openList = this.instantiatePathfindingQueue();
         openList.enqueue(new GraphEdgeImpl(end, null, 0, "end", false), null);
 
         while (openList.hasNext()) {
@@ -136,7 +137,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
         }
 
         final Set<GraphVertex> closedList = new HashSet<>();
-        final PathfindingQueue openList = new PathfindingPriorityQueue();
+        final PathfindingQueue openList = this.instantiatePathfindingQueue();
         openList.enqueue(new GraphEdgeImpl(null, start, 0, Pathfinder.MOVEMENT_START_TITLE, false), null);
 
         WildernessExits.WildernessExit pathTo30 = null;
@@ -212,6 +213,14 @@ public class PathfinderDijkstraReverse extends Pathfinder {
         }
 
         return path;
+    }
+
+    private PathfindingQueue instantiatePathfindingQueue() {
+        try {
+            return this.queueClass.getConstructor().newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Could not instantiate PathfindingQueue - Class: " + this.queueClass.toString(), e);
+        }
     }
 
     private record WildernessExits(

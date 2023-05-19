@@ -21,9 +21,10 @@ public class PathController {
     private final Graph graph = new GraphBuilder().buildGraph();
 
     private final Map<String, Pathfinder> ALGORITHM_STRING_TO_CLASS = Map.of(
-            "Dijkstra/PriorityQueue", new PathfinderDijkstra(graph, PathfindingPriorityQueue.class),
-            "Dijkstra/BucketQueue", new PathfinderDijkstra(graph, PathfindingBucketQueue.class),
-            "ReverseDijkstra/PriorityQueue", new PathfinderDijkstraReverse(graph)
+            "Dijkstra / PriorityQueue", new PathfinderDijkstra(graph, PathfindingPriorityQueue.class),
+            "Dijkstra / BucketQueue", new PathfinderDijkstra(graph, PathfindingBucketQueue.class),
+            "ReverseDijkstra / PriorityQueue", new PathfinderDijkstraReverse(graph, PathfindingPriorityQueue.class),
+            "ReverseDijkstra / BucketQueue", new PathfinderDijkstraReverse(graph, PathfindingBucketQueue.class)
     );
 
     public PathController() throws IOException {
