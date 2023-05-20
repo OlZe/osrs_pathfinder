@@ -22,7 +22,12 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
     @Override
     protected PartialPathfinderResult findPath(final GraphVertex start, final GraphVertex end, final HashSet<String> blacklist) {
-        final WildernessExits wildernessExits = this.findWildernessExits(start, blacklist);
+        final WildernessExits wildernessExits = this.findWildernessExits(start, end, blacklist);
+
+        // If goal found by chance, return path
+        if (wildernessExits.pathFound()) {
+            return new PartialPathfinderResult(true, wildernessExits.path(), wildernessExits.pathTotalCostX2(), wildernessExits.amountExpandedVertices(), wildernessExits.amountVerticesLeftInQueue());
+        }
 
         // If stuck in wilderness, return no path found
         if (!wildernessExits.exitsFound()) {
@@ -46,7 +51,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
             if (currentVertex.equals(start)) {
                 return new PartialPathfinderResult(
                         true,
-                        this.makePath(currentEntry),
+                        this.makePathReverse(currentEntry),
                         currentEntry.totalCostX2(),
                         closedList.size() + wildernessExits.amountVerticesLeftInQueue(),
                         openList.size() + wildernessExits.amountVerticesLeftInQueue());
@@ -88,7 +93,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
     }
 
-    private List<PathfinderResult.Movement> makePath(PathfindingQueue.Entry start) {
+    private List<PathfinderResult.Movement> makePathReverse(PathfindingQueue.Entry start) {
         List<PathfinderResult.Movement> path = new ArrayList<>();
         path.add(new PathfinderResult.Movement(start.edge().from().coordinate(), Pathfinder.MOVEMENT_START_TITLE));
 
@@ -101,9 +106,12 @@ public class PathfinderDijkstraReverse extends Pathfinder {
         return path;
     }
 
-    private WildernessExits findWildernessExits(GraphVertex start, HashSet<String> blacklist) {
+    /**
+     * Finds the nearest Lvl 30 and Lvl 20 wilderness exits. If by chance the end is found, it is returned as a path
+     */
+    private WildernessExits findWildernessExits(GraphVertex start, GraphVertex end, HashSet<String> blacklist) {
         if (start.wildernessLevel() == WildernessLevels.BELOW20) {
-            return new WildernessExits(true, start, start, 0, 0);
+            return new WildernessExits(false, null, 0, true, start, start, 0, 0);
         }
 
         final Set<GraphVertex> closedList = new HashSet<>();
@@ -122,6 +130,18 @@ public class PathfinderDijkstraReverse extends Pathfinder {
             }
             closedList.add(currentVertex);
 
+            // Goal found?
+            if (currentVertex.equals(end)) {
+                return new WildernessExits(true,
+                        makePath(currentEntry),
+                        currentEntry.totalCostX2(),
+                        false,
+                        null,
+                        null,
+                        closedList.size(),
+                        openList.size());
+            }
+
             // Exit found?
             if (currentVertex.wildernessLevel() == WildernessLevels.BELOW20) {
                 exit20 = currentVertex;
@@ -131,7 +151,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
                     exit30 = exit20;
                 }
 
-                return new WildernessExits(true, exit30, exit20, closedList.size(), openList.size());
+                return new WildernessExits(false, null, 0, true, exit30, exit20, closedList.size(), openList.size());
 
             } else if (currentVertex.wildernessLevel() == WildernessLevels.BETWEEN20AND30) {
                 if (exit30 == null) {
@@ -157,7 +177,19 @@ public class PathfinderDijkstraReverse extends Pathfinder {
             }
         }
 
-        return new WildernessExits(false, null, null, closedList.size(), openList.size());
+        return new WildernessExits(false, null, 0, false, null, null, closedList.size(), openList.size());
+    }
+
+    private List<PathfinderResult.Movement> makePath(final PathfindingQueue.Entry end) {
+        List<PathfinderResult.Movement> path = new LinkedList<>();
+
+        PathfindingQueue.Entry current = end;
+        while (current != null) {
+            path.add(0, new PathfinderResult.Movement(current.edge().to().coordinate(), current.edge().title()));
+            current = current.previous();
+        }
+
+        return path;
     }
 
     private PathfindingQueue instantiatePathfindingQueue() {
@@ -169,6 +201,9 @@ public class PathfinderDijkstraReverse extends Pathfinder {
     }
 
     private record WildernessExits(
+            boolean pathFound,
+            List<PathfinderResult.Movement> path,
+            int pathTotalCostX2,
             boolean exitsFound,
             GraphVertex exit30,
             GraphVertex exit20,
