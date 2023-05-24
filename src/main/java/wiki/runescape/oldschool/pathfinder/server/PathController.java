@@ -3,10 +3,7 @@ package wiki.runescape.oldschool.pathfinder.server;
 import org.springframework.web.bind.annotation.*;
 import wiki.runescape.oldschool.pathfinder.logic.graph.Graph;
 import wiki.runescape.oldschool.pathfinder.logic.graph.GraphBuilder;
-import wiki.runescape.oldschool.pathfinder.logic.pathfinder.Pathfinder;
-import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderDijkstra;
-import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderDijkstraReverse;
-import wiki.runescape.oldschool.pathfinder.logic.pathfinder.PathfinderResult;
+import wiki.runescape.oldschool.pathfinder.logic.pathfinder.*;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingArrayQueue;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingBucketQueue;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingPriorityQueue;
@@ -27,7 +24,10 @@ public class PathController {
             "Dijkstra / ArrayQueue", new PathfinderDijkstra(graph, PathfindingArrayQueue.class),
             "ReverseDijkstra / PriorityQueue", new PathfinderDijkstraReverse(graph, PathfindingPriorityQueue.class),
             "ReverseDijkstra / BucketQueue", new PathfinderDijkstraReverse(graph, PathfindingBucketQueue.class),
-            "ReverseDijkstra / ArrayQueue", new PathfinderDijkstraReverse(graph, PathfindingArrayQueue.class)
+            "ReverseDijkstra / ArrayQueue", new PathfinderDijkstraReverse(graph, PathfindingArrayQueue.class),
+            "ForwardReverseDijkstra / PriorityQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingPriorityQueue.class),
+            "ForwardReverseDijkstra / BucketQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingBucketQueue.class),
+            "ForwardReverseDijkstra / ArrayQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingArrayQueue.class)
     );
 
     public PathController() throws IOException {
