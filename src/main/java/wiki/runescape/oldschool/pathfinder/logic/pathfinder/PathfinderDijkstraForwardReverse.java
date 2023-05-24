@@ -6,6 +6,11 @@ import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueue;
 
 import java.util.*;
 
+/**
+ * WARNING: not optimal if start is in deep wilderness or, more technically,
+ * if the reverse search area includes multiple teleport destinations by the time
+ * the forward search can enqueue the teleports.
+ */
 public class PathfinderDijkstraForwardReverse extends Pathfinder {
     private final Collection<Teleport> teleports20To30Wildy;
     private final Collection<Teleport> teleportsTo20Wildy;
