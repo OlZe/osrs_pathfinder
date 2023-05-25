@@ -4,7 +4,6 @@ import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
 import wiki.runescape.oldschool.pathfinder.logic.WildernessLevels;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public record GraphVertex(
@@ -47,22 +46,13 @@ public record GraphVertex(
         return "[" + this.coordinate.toString() + "->" + neighbours + "]";
     }
 
-    /**
-     * Compares using their coordinate
-     */
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        final GraphVertex that = (GraphVertex) o;
-        return Objects.equals(coordinate, that.coordinate);
+        return this == o;
     }
 
-    /**
-     * Hashes this coordinate
-     */
     @Override
     public int hashCode() {
-        return Objects.hash(coordinate);
+        return System.identityHashCode(this);
     }
 }

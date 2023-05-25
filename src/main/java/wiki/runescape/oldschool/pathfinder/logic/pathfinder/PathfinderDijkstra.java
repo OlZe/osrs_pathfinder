@@ -1,6 +1,5 @@
 package wiki.runescape.oldschool.pathfinder.logic.pathfinder;
 
-import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
 import wiki.runescape.oldschool.pathfinder.logic.WildernessLevels;
 import wiki.runescape.oldschool.pathfinder.logic.graph.*;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueue;
@@ -28,7 +27,7 @@ public class PathfinderDijkstra extends PathfinderWeighted {
 
     @Override
     protected PartialPathfinderResult findPath(GraphVertex start, GraphVertex end, HashSet<String> blacklist) {
-        final Set<Coordinate> closedList = new HashSet<>();
+        final Set<GraphVertex> closedList = new HashSet<>();
         final PathfindingQueue openList = instantiatePathfindingQueue();
         openList.enqueue(new GraphEdgeImpl(null, start, 0, PathfinderResult.MOVEMENT_START_TITLE, false), null);
 
@@ -39,10 +38,10 @@ public class PathfinderDijkstra extends PathfinderWeighted {
             final PathfindingQueue.Entry currentEntry = openList.dequeue();
             final GraphVertex currentVertex = currentEntry.edge().to();
 
-            if (closedList.contains(currentVertex.coordinate())) {
+            if (closedList.contains(currentVertex)) {
                 continue;
             }
-            closedList.add(currentVertex.coordinate());
+            closedList.add(currentVertex);
 
             // Goal found?
             if (currentVertex.equals(end)) {
@@ -56,7 +55,7 @@ public class PathfinderDijkstra extends PathfinderWeighted {
 
             // Add neighbours of vertex to openList
             for (GraphEdge edge : currentVertex.edgesOut()) {
-                if (!blacklist.contains(edge.title()) && !closedList.contains(edge.to().coordinate())) {
+                if (!blacklist.contains(edge.title()) && !closedList.contains(edge.to())) {
                     openList.enqueue(edge, currentEntry);
                 }
             }
@@ -65,7 +64,7 @@ public class PathfinderDijkstra extends PathfinderWeighted {
             final boolean addTeleports20To30Wildy = !addedTeleports20To30Wildy && !(currentVertex.wildernessLevel().equals(WildernessLevels.ABOVE30));
             if (addTeleports20To30Wildy) {
                 for (Teleport teleport : this.teleports20To30Wildy) {
-                    if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to().coordinate())) {
+                    if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to())) {
                         openList.enqueue(teleport, currentEntry);
                     }
                 }
@@ -74,7 +73,7 @@ public class PathfinderDijkstra extends PathfinderWeighted {
             final boolean addTeleportsTo20Wildy = !addedTeleportsTo20Wildy && currentVertex.wildernessLevel().equals(WildernessLevels.BELOW20);
             if (addTeleportsTo20Wildy) {
                 for (Teleport teleport : this.teleportsTo20Wildy) {
-                    if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to().coordinate())) {
+                    if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to())) {
                         openList.enqueue(teleport, currentEntry);
                     }
                 }
