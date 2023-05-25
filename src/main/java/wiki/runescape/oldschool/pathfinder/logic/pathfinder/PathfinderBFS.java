@@ -54,7 +54,7 @@ public class PathfinderBFS extends PathfinderUnweighted {
 
             if(currentVertex instanceof final GraphVertexReal currentVertexReal) {
 
-                // Add neighbours of vertex to openlist
+                // Add neighbours of vertex to openList
                 for (GraphEdge edgeOut : currentVertexReal.edgesOut()) {
                     if(!blacklist.contains(edgeOut.title()) && !closedList.contains(edgeOut.to())) {
                         openList.enqueue(edgeOut.to(), currentEntry, edgeOut.title(), edgeOut.isWalking());
