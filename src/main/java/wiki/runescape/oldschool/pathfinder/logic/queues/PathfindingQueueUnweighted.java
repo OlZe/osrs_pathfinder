@@ -10,13 +10,14 @@ public class PathfindingQueueUnweighted {
         int newTotalCostX2 = 0;
 
         if(previous != null) {
-            newTotalCostX2 = previous.totalCostX2() + 1;
+            newTotalCostX2 = previous.totalCostX2();
             if(!edgeIsWalking && previous.edgeIsWalking()) {
                 // Walking stops, round up in case path stops on a half tick
                 if(newTotalCostX2 % 2 != 0) {
                     newTotalCostX2++;
                 }
             }
+            newTotalCostX2++;
         }
 
         this.queue.add(new Entry(vertex, previous, edgeTitle, edgeIsWalking, newTotalCostX2));
