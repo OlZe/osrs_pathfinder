@@ -4,7 +4,6 @@ import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
 import wiki.runescape.oldschool.pathfinder.logic.WildernessLevels;
 
 import java.util.List;
-import java.util.Objects;
 
 public record GraphVertexReal(
         Coordinate coordinate,
@@ -14,12 +13,12 @@ public record GraphVertexReal(
 ) implements GraphVertex {
 
     @Override
-    public boolean equals(final Object obj) {
-        return this == obj;
+    public boolean equals(final Object o) {
+        return this == o;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(this);
+        return System.identityHashCode(this);
     }
 }

@@ -7,7 +7,7 @@ import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueue;
 
 import java.util.*;
 
-public class PathfinderDijkstra extends Pathfinder {
+public class PathfinderDijkstra extends PathfinderWeighted {
     private final Collection<Teleport> teleports20To30Wildy;
     private final Collection<Teleport> teleportsTo20Wildy;
     private final Class<? extends PathfindingQueue> queueClass;
@@ -30,7 +30,7 @@ public class PathfinderDijkstra extends Pathfinder {
     protected PartialPathfinderResult findPath(GraphVertex start, GraphVertex end, HashSet<String> blacklist) {
         final Set<Coordinate> closedList = new HashSet<>();
         final PathfindingQueue openList = instantiatePathfindingQueue();
-        openList.enqueue(new GraphEdgeImpl(null, start, 0, Pathfinder.MOVEMENT_START_TITLE, false), null);
+        openList.enqueue(new GraphEdgeImpl(null, start, 0, PathfinderResult.MOVEMENT_START_TITLE, false), null);
 
         boolean addedTeleports20To30Wildy = false;
         boolean addedTeleportsTo20Wildy = false;

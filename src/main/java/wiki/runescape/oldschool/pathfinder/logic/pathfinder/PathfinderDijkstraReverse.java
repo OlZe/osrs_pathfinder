@@ -7,7 +7,7 @@ import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueue;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PathfinderDijkstraReverse extends Pathfinder {
+public class PathfinderDijkstraReverse extends PathfinderWeighted {
 
     private final Map<GraphVertex, List<Teleport>> teleportsTo30Map;
     private final Map<GraphVertex, List<Teleport>> teleportsTo20Map;
@@ -95,7 +95,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
     private List<PathfinderResult.Movement> makePathReverse(PathfindingQueue.Entry start) {
         List<PathfinderResult.Movement> path = new ArrayList<>();
-        path.add(new PathfinderResult.Movement(start.edge().from().coordinate(), Pathfinder.MOVEMENT_START_TITLE));
+        path.add(new PathfinderResult.Movement(start.edge().from().coordinate(), PathfinderResult.MOVEMENT_START_TITLE));
 
         PathfindingQueue.Entry current = start;
         while (current.previous() != null) {
@@ -116,7 +116,7 @@ public class PathfinderDijkstraReverse extends Pathfinder {
 
         final Set<GraphVertex> closedList = new HashSet<>();
         final PathfindingQueue openList = this.instantiatePathfindingQueue();
-        openList.enqueue(new GraphEdgeImpl(null, start, 0, Pathfinder.MOVEMENT_START_TITLE, false), null);
+        openList.enqueue(new GraphEdgeImpl(null, start, 0, PathfinderResult.MOVEMENT_START_TITLE, false), null);
 
         GraphVertex exit30 = null;
         GraphVertex exit20 = null;

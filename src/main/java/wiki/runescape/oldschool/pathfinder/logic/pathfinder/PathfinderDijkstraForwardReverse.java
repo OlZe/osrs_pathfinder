@@ -11,7 +11,7 @@ import java.util.*;
  * if the reverse search area includes multiple teleport destinations by the time
  * the forward search can enqueue the teleports.
  */
-public class PathfinderDijkstraForwardReverse extends Pathfinder {
+public class PathfinderDijkstraForwardReverse extends PathfinderWeighted {
     private final Collection<Teleport> teleports20To30Wildy;
     private final Collection<Teleport> teleportsTo20Wildy;
     private final Class<? extends PathfindingQueue> queueClass;
@@ -35,7 +35,7 @@ public class PathfinderDijkstraForwardReverse extends Pathfinder {
         // Init forward data structures
         final HashMap<GraphVertex, PathfindingQueue.Entry> closedListForward = new HashMap<>();
         final PathfindingQueue openListForward = this.instantiatePathfindingQueue();
-        openListForward.enqueue(new GraphEdgeImpl(null, start, 0, Pathfinder.MOVEMENT_START_TITLE, false), null);
+        openListForward.enqueue(new GraphEdgeImpl(null, start, 0, PathfinderResult.MOVEMENT_START_TITLE, false), null);
 
         // Init backward data structures
         final HashMap<GraphVertex, PathfindingQueue.Entry> closedListReverse = new HashMap<>();

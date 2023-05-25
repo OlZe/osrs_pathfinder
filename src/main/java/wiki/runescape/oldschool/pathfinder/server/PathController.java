@@ -17,6 +17,7 @@ import java.util.Map;
 public class PathController {
 
     private final Graph graph = new GraphBuilder().buildGraph();
+    private final wiki.runescape.oldschool.pathfinder.logic.graph.unweighted.Graph unweightedGraph = new wiki.runescape.oldschool.pathfinder.logic.graph.unweighted.GraphBuilder().buildUnweightedGraph(graph);
 
     private final Map<String, Pathfinder> ALGORITHM_STRING_TO_CLASS = Map.of(
             "Dijkstra / PriorityQueue", new PathfinderDijkstra(graph, PathfindingPriorityQueue.class),
@@ -27,7 +28,8 @@ public class PathController {
             "ReverseDijkstra / ArrayQueue", new PathfinderDijkstraReverse(graph, PathfindingArrayQueue.class),
             "ForwardReverseDijkstra / PriorityQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingPriorityQueue.class),
             "ForwardReverseDijkstra / BucketQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingBucketQueue.class),
-            "ForwardReverseDijkstra / ArrayQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingArrayQueue.class)
+            "ForwardReverseDijkstra / ArrayQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingArrayQueue.class),
+            "Breadth-First-Search / UnweightedQueue", new PathfinderBFS(unweightedGraph)
     );
 
     public PathController() throws IOException {

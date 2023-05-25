@@ -12,6 +12,8 @@ public record PathfinderResult(boolean pathFound,
                                int amountVerticesLeftInQueue,
                                String reasonForNoPathFound) {
 
+    public static final String MOVEMENT_START_TITLE = "start";
+
     public record Movement(Coordinate destination,
                            String methodOfMovement) {
     }
