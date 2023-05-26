@@ -6,17 +6,17 @@ import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueueUnweight
 
 import java.util.*;
 
-public class PathfinderBFS extends PathfinderUnweighted {
+public class PathfinderBfs extends PathfinderUnweighted {
 
     private final Collection<Teleport> teleportsTo20Wildy;
     private final Collection<Teleport> teleports20To30Wildy;
 
-    public PathfinderBFS(final Graph unweightedGraph) {
+    public PathfinderBfs(final Graph unweightedGraph) {
         super(unweightedGraph);
         this.teleportsTo20Wildy = new ArrayList<>();
         this.teleports20To30Wildy = new ArrayList<>();
         unweightedGraph.teleports().forEach(tp -> {
-            if(tp.canTeleportUpTo30Wildy()) {
+            if (tp.canTeleportUpTo30Wildy()) {
                 this.teleports20To30Wildy.add(tp);
             } else {
                 this.teleportsTo20Wildy.add(tp);
@@ -33,11 +33,11 @@ public class PathfinderBFS extends PathfinderUnweighted {
         boolean addedTeleports20To30Wildy = false;
         boolean addedTeleportsTo20Wildy = false;
 
-        while(openList.hasNext()) {
+        while (openList.hasNext()) {
             final PathfindingQueueUnweighted.Entry currentEntry = openList.dequeue();
             final GraphVertex currentVertex = currentEntry.vertex();
 
-            if(closedList.contains(currentVertex)) {
+            if (closedList.contains(currentVertex)) {
                 continue;
             }
             closedList.add(currentVertex);
@@ -52,11 +52,11 @@ public class PathfinderBFS extends PathfinderUnweighted {
                         openList.size());
             }
 
-            if(currentVertex instanceof final GraphVertexReal currentVertexReal) {
+            if (currentVertex instanceof final GraphVertexReal currentVertexReal) {
 
                 // Add neighbours of vertex to openList
                 for (GraphEdge edgeOut : currentVertexReal.edgesOut()) {
-                    if(!blacklist.contains(edgeOut.title()) && !closedList.contains(edgeOut.to())) {
+                    if (!blacklist.contains(edgeOut.title()) && !closedList.contains(edgeOut.to())) {
                         openList.enqueue(edgeOut.to(), currentEntry, edgeOut.title(), edgeOut.isWalking());
                     }
                 }
@@ -80,12 +80,11 @@ public class PathfinderBFS extends PathfinderUnweighted {
                     }
                     addedTeleportsTo20Wildy = true;
                 }
-            }
-            else {
+            } else {
                 // currentVertex is instance of GraphVertexPhantom
                 // Add successor to openList
                 final GraphVertexPhantom currentVertexPhantom = (GraphVertexPhantom) currentVertex;
-                if(!closedList.contains(currentVertexPhantom.next)) {
+                if (!closedList.contains(currentVertexPhantom.next)) {
                     openList.enqueue(currentVertexPhantom.next, currentEntry, currentEntry.edgeTitle(), currentEntry.edgeIsWalking());
                 }
             }
@@ -99,8 +98,8 @@ public class PathfinderBFS extends PathfinderUnweighted {
         LinkedList<PathfinderResult.Movement> path = new LinkedList<>();
 
         PathfindingQueueUnweighted.Entry current = end;
-        while(current !=  null) {
-            if(current.vertex() instanceof final GraphVertexReal currentVertexReal) {
+        while (current != null) {
+            if (current.vertex() instanceof final GraphVertexReal currentVertexReal) {
                 path.addFirst(new PathfinderResult.Movement(currentVertexReal.coordinate(), current.edgeTitle()));
             }
             current = current.previous();

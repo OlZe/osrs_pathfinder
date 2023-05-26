@@ -56,6 +56,26 @@ public class PathfindingQueueUnweighted {
         return entry;
     }
 
+    public Entry peek() {
+        final Entry entry;
+
+        if (currentQueueIndexFirst <= currentQueueIndexLast) {
+            // Peek at currentQueue
+            entry = currentQueue[currentQueueIndexFirst];
+        } else {
+            // currentQueue is empty which means we have to move up to the next queue,
+            // or we have no more elements left to dequeue
+            final boolean noMoreElementsLeft = nextQueueIndexLast < 0 && nextNextQueueIndexLast < 0;
+            if (noMoreElementsLeft) {
+                entry = null;
+            } else {
+                this.moveToNextQueue();
+                entry = peek();
+            }
+        }
+        return entry;
+    }
+
     public boolean hasNext() {
         return currentQueueIndexFirst <= currentQueueIndexLast // currentQueue populated
                 || nextQueueIndexLast >= 0 // nextQueue populated

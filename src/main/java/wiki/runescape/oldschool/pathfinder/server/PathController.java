@@ -26,10 +26,8 @@ public class PathController {
             "ReverseDijkstra / PriorityQueue", new PathfinderDijkstraReverse(graph, PathfindingPriorityQueue.class),
             "ReverseDijkstra / BucketQueue", new PathfinderDijkstraReverse(graph, PathfindingBucketQueue.class),
             "ReverseDijkstra / ArrayQueue", new PathfinderDijkstraReverse(graph, PathfindingArrayQueue.class),
-            "ForwardReverseDijkstra / PriorityQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingPriorityQueue.class),
-            "ForwardReverseDijkstra / BucketQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingBucketQueue.class),
-            "ForwardReverseDijkstra / ArrayQueue", new PathfinderDijkstraForwardReverse(graph, PathfindingArrayQueue.class),
-            "Breadth-First-Search / UnweightedQueue", new PathfinderBFS(unweightedGraph)
+            "BFS-MeetInMiddle / UnweightedQueue", new PathfinderBfsMeetInMiddle(unweightedGraph),
+            "BFS / UnweightedQueue", new PathfinderBfs(unweightedGraph)
     );
 
     public PathController() throws IOException {
