@@ -7,7 +7,7 @@ import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueueUnweight
 import java.util.*;
 
 /**
- * WARNING: not optimal if the reverse search area includes multiple teleport destinations
+ * WARNING: not optimal if the backwards search area includes multiple teleport destinations
  * by the time the forward search can process the teleports.
  */
 public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {

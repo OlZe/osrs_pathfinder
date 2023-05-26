@@ -23,9 +23,9 @@ public class PathController {
             "Dijkstra / PriorityQueue", new PathfinderDijkstra(graph, PathfindingPriorityQueue.class),
             "Dijkstra / BucketQueue", new PathfinderDijkstra(graph, PathfindingBucketQueue.class),
             "Dijkstra / ArrayQueue", new PathfinderDijkstra(graph, PathfindingArrayQueue.class),
-            "ReverseDijkstra / PriorityQueue", new PathfinderDijkstraReverse(graph, PathfindingPriorityQueue.class),
-            "ReverseDijkstra / BucketQueue", new PathfinderDijkstraReverse(graph, PathfindingBucketQueue.class),
-            "ReverseDijkstra / ArrayQueue", new PathfinderDijkstraReverse(graph, PathfindingArrayQueue.class),
+            "Dijkstra-Backwards / PriorityQueue", new PathfinderDijkstraBackwards(graph, PathfindingPriorityQueue.class),
+            "Dijkstra-Backwards / BucketQueue", new PathfinderDijkstraBackwards(graph, PathfindingBucketQueue.class),
+            "Dijkstra-Backwards / ArrayQueue", new PathfinderDijkstraBackwards(graph, PathfindingArrayQueue.class),
             "BFS-MeetInMiddle / UnweightedQueue", new PathfinderBfsMeetInMiddle(unweightedGraph),
             "BFS / UnweightedQueue", new PathfinderBfs(unweightedGraph)
     );

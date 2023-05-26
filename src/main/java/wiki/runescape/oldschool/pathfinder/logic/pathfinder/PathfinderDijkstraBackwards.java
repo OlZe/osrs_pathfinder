@@ -7,13 +7,13 @@ import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueue;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PathfinderDijkstraReverse extends PathfinderWeighted {
+public class PathfinderDijkstraBackwards extends PathfinderWeighted {
 
     private final Map<GraphVertex, List<Teleport>> teleportsTo30Map;
     private final Map<GraphVertex, List<Teleport>> teleportsTo20Map;
     private final Class<? extends PathfindingQueue> queueClass;
 
-    public PathfinderDijkstraReverse(final Graph graph, final Class<? extends PathfindingQueue> queueClass) {
+    public PathfinderDijkstraBackwards(final Graph graph, final Class<? extends PathfindingQueue> queueClass) {
         super(graph);
         this.teleportsTo30Map = graph.teleports().stream().filter(Teleport::canTeleportUpTo30Wildy).collect(Collectors.groupingBy(Teleport::to));
         this.teleportsTo20Map = graph.teleports().stream().filter(tp -> !tp.canTeleportUpTo30Wildy()).collect(Collectors.groupingBy(Teleport::to));
@@ -51,7 +51,7 @@ public class PathfinderDijkstraReverse extends PathfinderWeighted {
             if (currentVertex.equals(start)) {
                 return new PartialPathfinderResult(
                         true,
-                        this.makePathReverse(currentEntry),
+                        this.makePathBackwards(currentEntry),
                         currentEntry.totalCostX2(),
                         closedList.size() + wildernessExits.amountVerticesLeftInQueue(),
                         openList.size() + wildernessExits.amountVerticesLeftInQueue());
@@ -93,7 +93,7 @@ public class PathfinderDijkstraReverse extends PathfinderWeighted {
 
     }
 
-    private List<PathfinderResult.Movement> makePathReverse(PathfindingQueue.Entry start) {
+    private List<PathfinderResult.Movement> makePathBackwards(PathfindingQueue.Entry start) {
         List<PathfinderResult.Movement> path = new ArrayList<>();
         path.add(new PathfinderResult.Movement(start.edge().from().coordinate(), PathfinderResult.MOVEMENT_START_TITLE));
 
@@ -133,7 +133,7 @@ public class PathfinderDijkstraReverse extends PathfinderWeighted {
             // Goal found?
             if (currentVertex.equals(end)) {
                 return new WildernessExits(true,
-                        makePath(currentEntry),
+                        makePathForwards(currentEntry),
                         currentEntry.totalCostX2(),
                         false,
                         null,
@@ -180,7 +180,7 @@ public class PathfinderDijkstraReverse extends PathfinderWeighted {
         return new WildernessExits(false, null, 0, false, null, null, closedList.size(), openList.size());
     }
 
-    private List<PathfinderResult.Movement> makePath(final PathfindingQueue.Entry end) {
+    private List<PathfinderResult.Movement> makePathForwards(final PathfindingQueue.Entry end) {
         List<PathfinderResult.Movement> path = new LinkedList<>();
 
         PathfindingQueue.Entry current = end;
