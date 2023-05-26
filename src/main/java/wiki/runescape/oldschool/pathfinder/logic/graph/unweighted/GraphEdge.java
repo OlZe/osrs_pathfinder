@@ -4,6 +4,9 @@ public record GraphEdge(
         GraphVertex from,
         GraphVertex to,
         String title,
-        boolean isWalking
+        boolean isWalking,
+
+        GraphVertexReal realFrom,
+        GraphVertexReal realTo
         ) {
 }

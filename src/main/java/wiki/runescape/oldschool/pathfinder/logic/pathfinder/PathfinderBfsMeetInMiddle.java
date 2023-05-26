@@ -70,7 +70,7 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                     if(currentEntry.vertex() instanceof final GraphVertexReal currentVertexReal) {
                         // Add forward neighbours to openList
                         for (GraphEdge edgeOut : currentVertexReal.edgesOut()) {
-                            if (!blacklist.contains(edgeOut.title()) && !closedListForwards.containsKey(edgeOut.to())) {
+                            if (!blacklist.contains(edgeOut.title()) && !closedListForwards.containsKey(edgeOut.realTo())) {
                                 openListForwards.enqueue(edgeOut.to(), currentEntry, edgeOut.title(), edgeOut.isWalking());
                             }
                         }
@@ -79,7 +79,7 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                         final boolean addTeleports20To30Wildy = !addedTeleports20To30Wildy && !(currentVertexReal.wildernessLevel().equals(WildernessLevels.ABOVE30));
                         if (addTeleports20To30Wildy) {
                             for (Teleport teleport : this.teleports20To30Wildy) {
-                                if (!blacklist.contains(teleport.title()) && !closedListForwards.containsKey(teleport.to())) {
+                                if (!blacklist.contains(teleport.title()) && !closedListForwards.containsKey(teleport.realTo())) {
                                     openListForwards.enqueue(teleport.to(), currentEntry, teleport.title(), false);
                                 }
                             }
@@ -88,7 +88,7 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                         final boolean addTeleportsTo20Wildy = !addedTeleportsTo20Wildy && currentVertexReal.wildernessLevel().equals(WildernessLevels.BELOW20);
                         if (addTeleportsTo20Wildy) {
                             for (Teleport teleport : this.teleportsTo20Wildy) {
-                                if (!blacklist.contains(teleport.title()) && !closedListForwards.containsKey(teleport.to())) {
+                                if (!blacklist.contains(teleport.title()) && !closedListForwards.containsKey(teleport.realTo())) {
                                     openListForwards.enqueue(teleport.to(), currentEntry, teleport.title(), false);
                                 }
                             }
@@ -98,8 +98,8 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                         // currentVertex is instance of GraphVertexPhantom
                         // Add successor to openList
                         final GraphVertexPhantom currentVertexPhantom = (GraphVertexPhantom) currentEntry.vertex();
-                        if(!closedListForwards.containsKey(currentVertexPhantom.next)) {
-                            openListForwards.enqueue(currentVertexPhantom.next, currentEntry, currentEntry.edgeTitle(), false);
+                        if(!closedListForwards.containsKey(currentVertexPhantom.toReal)) {
+                            openListForwards.enqueue(currentVertexPhantom.to, currentEntry, currentEntry.edgeTitle(), false);
                         }
                     }
                 }
@@ -128,7 +128,7 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                     if(currentEntry.vertex() instanceof final GraphVertexReal currentVertexReal) {
                         // Add predecessors to openListBackwards
                         for (GraphEdge edgeIn : currentVertexReal.edgesIn()) {
-                            if (!blacklist.contains(edgeIn.title()) && !closedListBackwards.containsKey(edgeIn.from())) {
+                            if (!blacklist.contains(edgeIn.title()) && !closedListBackwards.containsKey(edgeIn.realFrom())) {
                                 openListBackwards.enqueue(edgeIn.from(), currentEntry, edgeIn.title(), edgeIn.isWalking());
                             }
                         }
@@ -136,8 +136,8 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                     else {
                         // vertex is instance of GraphVertexPhantom
                         final GraphVertexPhantom currentVertexPhantom = (GraphVertexPhantom) currentEntry.vertex();
-                        if(!closedListBackwards.containsKey(currentVertexPhantom.before)) {
-                            openListBackwards.enqueue(currentVertexPhantom.before, currentEntry, currentEntry.edgeTitle(), false);
+                        if(!closedListBackwards.containsKey(currentVertexPhantom.fromReal)) {
+                            openListBackwards.enqueue(currentVertexPhantom.from, currentEntry, currentEntry.edgeTitle(), false);
                         }
                     }
                 }

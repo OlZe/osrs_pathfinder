@@ -27,7 +27,7 @@ public class GraphBuilder {
                     if (edge.costX2() == 1) {
                         final GraphVertexReal from = vertices.get(edge.from().coordinate());
                         final GraphVertexReal to = vertices.get(edge.to().coordinate());
-                        final GraphEdge newEdge = new GraphEdge(from, to, edge.title(), edge.isWalking());
+                        final GraphEdge newEdge = new GraphEdge(from, to, edge.title(), edge.isWalking(), from, to);
                         from.edgesOut().add(newEdge);
                         to.edgesIn().add(newEdge);
                     } else {
@@ -37,20 +37,25 @@ public class GraphBuilder {
                         final GraphVertexReal last = vertices.get(edge.to().coordinate());
 
                         final GraphVertexPhantom second = new GraphVertexPhantom();
-                        second.before = first;
-                        first.edgesOut().add(new GraphEdge(first, second, edge.title(), false));
+                        second.fromReal = first;
+                        second.from = first;
+                        second.toReal = last;
+                        first.edgesOut().add(new GraphEdge(first, second, edge.title(), false, first, last));
 
                         GraphVertexPhantom current = second;
                         for (int i = 2; i < edge.costX2(); i++) {
                             final GraphVertexPhantom next = new GraphVertexPhantom();
-                            current.next = next;
-                            next.before = current;
+                            next.fromReal = current.fromReal;
+                            next.toReal = current.toReal;
+                            next.from = current;
+                            current.to = next;
+
                             current = next;
                         }
 
                         final GraphVertexPhantom secondLast = current;
-                        secondLast.next = last;
-                        last.edgesIn().add(new GraphEdge(secondLast, last, edge.title(), false));
+                        secondLast.to = last;
+                        last.edgesIn().add(new GraphEdge(secondLast, last, edge.title(), false, first, last));
                     }
                 });
 
@@ -68,14 +73,16 @@ public class GraphBuilder {
         GraphVertexPhantom current = second;
         for (int i = 2; i < teleport.costX2(); i++) {
             final GraphVertexPhantom next = new GraphVertexPhantom();
-            current.next = next;
-            next.before = current;
+            current.to = next;
+            current.toReal = destination;
+            next.from = current;
             current = next;
         }
 
         final GraphVertexPhantom secondLast = current;
-        secondLast.next = destination;
+        secondLast.to = destination;
+        secondLast.toReal = destination;
 
-        return new Teleport(second, teleport.title(), teleport.canTeleportUpTo30Wildy());
+        return new Teleport(second, teleport.title(), teleport.canTeleportUpTo30Wildy(), destination);
     }
 }

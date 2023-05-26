@@ -56,7 +56,7 @@ public class PathfinderBfs extends PathfinderUnweighted {
 
                 // Add neighbours of vertex to openList
                 for (GraphEdge edgeOut : currentVertexReal.edgesOut()) {
-                    if (!blacklist.contains(edgeOut.title()) && !closedList.contains(edgeOut.to())) {
+                    if (!blacklist.contains(edgeOut.title()) && !closedList.contains(edgeOut.realTo())) {
                         openList.enqueue(edgeOut.to(), currentEntry, edgeOut.title(), edgeOut.isWalking());
                     }
                 }
@@ -65,7 +65,7 @@ public class PathfinderBfs extends PathfinderUnweighted {
                 final boolean addTeleports20To30Wildy = !addedTeleports20To30Wildy && !(currentVertexReal.wildernessLevel().equals(WildernessLevels.ABOVE30));
                 if (addTeleports20To30Wildy) {
                     for (Teleport teleport : this.teleports20To30Wildy) {
-                        if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to())) {
+                        if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.realTo())) {
                             openList.enqueue(teleport.to(), currentEntry, teleport.title(), false);
                         }
                     }
@@ -74,7 +74,7 @@ public class PathfinderBfs extends PathfinderUnweighted {
                 final boolean addTeleportsTo20Wildy = !addedTeleportsTo20Wildy && currentVertexReal.wildernessLevel().equals(WildernessLevels.BELOW20);
                 if (addTeleportsTo20Wildy) {
                     for (Teleport teleport : this.teleportsTo20Wildy) {
-                        if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.to())) {
+                        if (!blacklist.contains(teleport.title()) && !closedList.contains(teleport.realTo())) {
                             openList.enqueue(teleport.to(), currentEntry, teleport.title(), false);
                         }
                     }
@@ -84,8 +84,8 @@ public class PathfinderBfs extends PathfinderUnweighted {
                 // currentVertex is instance of GraphVertexPhantom
                 // Add successor to openList
                 final GraphVertexPhantom currentVertexPhantom = (GraphVertexPhantom) currentVertex;
-                if (!closedList.contains(currentVertexPhantom.next)) {
-                    openList.enqueue(currentVertexPhantom.next, currentEntry, currentEntry.edgeTitle(), currentEntry.edgeIsWalking());
+                if (!closedList.contains(currentVertexPhantom.toReal)) {
+                    openList.enqueue(currentVertexPhantom.to, currentEntry, currentEntry.edgeTitle(), false);
                 }
             }
         }
