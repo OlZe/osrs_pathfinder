@@ -119,13 +119,13 @@ public class PathfinderBfsBackwards extends PathfinderUnweighted {
     }
 
     private GraphVertexPhantom createTeleportWithOrigin(Teleport teleport, GraphVertexReal newOrigin) {
-        final GraphVertexPhantom first = new GraphVertexPhantom();
-        first.from = newOrigin;
-        first.fromReal = newOrigin;
-        first.toReal = teleport.realTo();
+        final GraphVertexPhantom newFirst = new GraphVertexPhantom();
+        newFirst.from = newOrigin;
+        newFirst.fromReal = newOrigin;
+        newFirst.toReal = teleport.realTo();
 
-        GraphVertex currentOriginal = teleport.to();
-        GraphVertexPhantom previousCopy = first;
+        GraphVertex currentOriginal = teleport.to().to; // Skip first phantom vertex as its being replaced by newFirst
+        GraphVertexPhantom previousCopy = newFirst;
         GraphVertexPhantom currentCopy = null;
         while(currentOriginal instanceof final GraphVertexPhantom currentOriginalPhantom) {
             currentCopy = new GraphVertexPhantom();
