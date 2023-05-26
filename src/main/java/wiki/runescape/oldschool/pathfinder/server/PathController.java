@@ -26,9 +26,10 @@ public class PathController {
             "Dijkstra-Backwards / PriorityQueue", new PathfinderDijkstraBackwards(graph, PathfindingPriorityQueue.class),
             "Dijkstra-Backwards / BucketQueue", new PathfinderDijkstraBackwards(graph, PathfindingBucketQueue.class),
             "Dijkstra-Backwards / ArrayQueue", new PathfinderDijkstraBackwards(graph, PathfindingArrayQueue.class),
-            "BFS-MeetInMiddle / UnweightedQueue", new PathfinderBfsMeetInMiddle(unweightedGraph),
-            "BFS / UnweightedQueue", new PathfinderBfs(unweightedGraph)
-    );
+            "BFS / UnweightedQueue", new PathfinderBfs(unweightedGraph),
+            "BFS-Backwards / UnweightedQueue", new PathfinderBfsBackwards(unweightedGraph),
+            "BFS-MeetInMiddle / UnweightedQueue", new PathfinderBfsMeetInMiddle(unweightedGraph)
+            );
 
     public PathController() throws IOException {
     }
