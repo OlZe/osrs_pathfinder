@@ -9,4 +9,9 @@ public record Graph(
         Map<Coordinate, GraphVertexReal> vertices,
         Collection<Teleport> teleports
 ) {
+
+    @Override
+    public String toString() {
+        return "Unweighted Graph";
+    }
 }

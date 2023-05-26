@@ -21,4 +21,9 @@ public record GraphVertexReal(
     public int hashCode() {
         return System.identityHashCode(this);
     }
+
+    @Override
+    public String toString() {
+        return coordinate().toString();
+    }
 }
