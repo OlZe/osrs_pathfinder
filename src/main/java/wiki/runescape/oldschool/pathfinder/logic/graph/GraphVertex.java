@@ -6,14 +6,29 @@ import wiki.runescape.oldschool.pathfinder.logic.WildernessLevels;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record GraphVertex(
-        Coordinate coordinate,
-        List<GraphEdge> edgesOut,
-        List<GraphEdge> edgesIn,
-        WildernessLevels wildernessLevel) {
+public final class GraphVertex {
+    private final Coordinate coordinate;
+    private final List<GraphEdge> edgesOut;
+    private final List<GraphEdge> edgesIn;
+    private final WildernessLevels wildernessLevel;
+    private final int hashCode;
+
+    public GraphVertex(
+            Coordinate coordinate,
+            List<GraphEdge> edgesOut,
+            List<GraphEdge> edgesIn,
+            WildernessLevels wildernessLevel) {
+        this.coordinate = coordinate;
+        this.edgesOut = edgesOut;
+        this.edgesIn = edgesIn;
+        this.wildernessLevel = wildernessLevel;
+        this.hashCode = System.identityHashCode(this);
+    }
+
 
     /**
      * Adds a unidirectional edge from this Vertex to the newNeighbour
+     *
      * @param newNeighbour The new neighbour
      */
     public void addEdgeTo(GraphVertex newNeighbour, int costX2, String methodOfMovement, boolean isWalking) {
@@ -53,6 +68,23 @@ public record GraphVertex(
 
     @Override
     public int hashCode() {
-        return System.identityHashCode(this);
+        return hashCode;
     }
+
+    public Coordinate coordinate() {
+        return coordinate;
+    }
+
+    public List<GraphEdge> edgesOut() {
+        return edgesOut;
+    }
+
+    public List<GraphEdge> edgesIn() {
+        return edgesIn;
+    }
+
+    public WildernessLevels wildernessLevel() {
+        return wildernessLevel;
+    }
+
 }

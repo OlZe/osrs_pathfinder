@@ -1,14 +1,21 @@
 package wiki.runescape.oldschool.pathfinder.logic.graph.unweighted;
 
 public class GraphVertexPhantom implements GraphVertex {
-    // Not record class because instantiation records with cyclic references is impossible
+    // final fields because instantiation this class with cyclic references is impossible
     public GraphVertex from;
     public GraphVertex to;
     public GraphVertexReal fromReal;
     public GraphVertexReal toReal;
 
+    private final int hashCode = System.identityHashCode(this);
+
     @Override
     public String toString() {
         return "Phantom Vertex";
+    }
+
+    @Override
+    public int hashCode() {
+        return this.hashCode;
     }
 }
