@@ -250,13 +250,13 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
 
             GraphVertex currentOriginal = teleport.to().to;
             GraphVertexPhantom currentCopy = firstCopy;
-            GraphVertexPhantom previousyCopy = null;
+            GraphVertexPhantom previousCopy = null;
             while(currentOriginal instanceof final GraphVertexPhantom currentOriginalPhantom) {
-                previousyCopy = currentCopy;
+                previousCopy = currentCopy;
                 currentCopy = new GraphVertexPhantom();
 
-                currentCopy.from = previousyCopy;
-                previousyCopy.to = currentCopy;
+                currentCopy.from = previousCopy;
+                previousCopy.to = currentCopy;
                 currentCopy.toReal = teleport.realTo();
 
                 currentOriginal = currentOriginalPhantom.to;
