@@ -14,8 +14,10 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
 
     public PathfinderBfsMeetAtTeleport(final Graph unweightedGraph) {
         super(unweightedGraph);
-        teleportsTo20Map = unweightedGraph.teleports().stream().filter(tp -> !tp.canTeleportUpTo30Wildy()).collect(Collectors.groupingBy(Teleport::realTo));
-        teleportsTo30Map = unweightedGraph.teleports().stream().filter(Teleport::canTeleportUpTo30Wildy).collect(Collectors.groupingBy(Teleport::realTo));
+        // Create copies as they will be modified by the search algorithm
+        final Collection<Teleport> teleportCopies = this.copyTeleports(unweightedGraph.teleports());
+        teleportsTo20Map = teleportCopies.stream().filter(tp -> !tp.canTeleportUpTo30Wildy()).collect(Collectors.groupingBy(Teleport::realTo));
+        teleportsTo30Map = teleportCopies.stream().filter(Teleport::canTeleportUpTo30Wildy).collect(Collectors.groupingBy(Teleport::realTo));
     }
 
     @Override
@@ -61,9 +63,25 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
                         closestVertexBelow20 = currentVertex;
                         closestVertexBelow20Distance = currentEntry.totalCostX2();
 
+                        // Set teleports to originate from lvl 20 exit
+                        for (List<Teleport> teleports : teleportsTo20Map.values()) {
+                            for (Teleport teleport : teleports) {
+                                this.setTeleportOrigin(teleport, closestVertexBelow20);
+                            }
+
+                        }
+
+
                         // If no closestVertexBelow30 has been found yet, use closestVertexBelow20 as it is faster
                         if (closestVertexBelow30 == null) {
                             closestVertexBelow30 = closestVertexBelow20;
+
+                            // Set teleports to originate from lvl 30 exit
+                            for (List<Teleport> teleports : this.teleportsTo30Map.values()) {
+                                for (Teleport teleport : teleports) {
+                                    this.setTeleportOrigin(teleport, closestVertexBelow30);
+                                }
+                            }
                         }
                     }
                 }
@@ -72,6 +90,14 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
                     if(closestVertexBelow30 == null) {
                         closestVertexBelow30 = currentVertex;
 
+
+                        // Set teleports to originate from lvl 30 exit
+                        for (List<Teleport> teleports : this.teleportsTo30Map.values()) {
+                            for (Teleport teleport : teleports) {
+                                this.setTeleportOrigin(teleport, closestVertexBelow30);
+                            }
+                        }
+
                         // Enqueue lvl 30 teleports
                         for (List<Teleport> teleports30 : this.teleportsTo30Map.values()) {
                             for (Teleport teleport30 : teleports30) {
@@ -79,7 +105,6 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
                                     openListForwards.enqueue(teleport30.to(), currentEntry, teleport30.title(), false);
                                 }
                             }
-
                         }
                     }
                 }
@@ -142,8 +167,8 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
                 if(teleportsUpTo30Here != null && !closedListBackwards.contains(closestVertexBelow30)) {
                     for (Teleport teleportUpTo30Here : teleportsUpTo30Here) {
                         if(!blacklist.contains(teleportUpTo30Here.title())) {
-                            final GraphVertexPhantom newTeleport = this.createTeleportWithOrigin(teleportUpTo30Here, closestVertexBelow30);
-                            openListBackwards.enqueue(newTeleport, currentEntry, teleportUpTo30Here.title(), false);
+                            final GraphVertexPhantom lastVertex = this.getLast(teleportUpTo30Here);
+                            openListBackwards.enqueue(lastVertex, currentEntry, teleportUpTo30Here.title(), false);
                         }
                     }
                 }
@@ -151,8 +176,8 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
                 if(teleportsUpTo20Here != null && !closedListBackwards.contains(closestVertexBelow20)) {
                     for (Teleport teleportUpTo20Here : teleportsUpTo20Here) {
                         if(!blacklist.contains(teleportUpTo20Here.title())) {
-                            final GraphVertexPhantom newTeleport = this.createTeleportWithOrigin(teleportUpTo20Here, closestVertexBelow20);
-                            openListBackwards.enqueue(newTeleport, currentEntry, teleportUpTo20Here.title(), false);
+                            final GraphVertexPhantom lastVertex = this.getLast(teleportUpTo20Here);
+                            openListBackwards.enqueue(lastVertex, currentEntry, teleportUpTo20Here.title(), false);
                         }
                     }
                 }
@@ -168,28 +193,21 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
                 openListBackwards.size());
     }
 
-    private GraphVertexPhantom createTeleportWithOrigin(Teleport teleport, GraphVertexReal newOrigin) {
-        final GraphVertexPhantom newFirst = new GraphVertexPhantom();
-        newFirst.from = newOrigin;
-        newFirst.fromReal = newOrigin;
-        newFirst.toReal = teleport.realTo();
-
-        GraphVertex currentOriginal = teleport.to().to; // Skip first phantom vertex as its being replaced by newFirst
-        GraphVertexPhantom previousCopy = newFirst;
-        GraphVertexPhantom currentCopy = null;
-        while(currentOriginal instanceof final GraphVertexPhantom currentOriginalPhantom) {
-            currentCopy = new GraphVertexPhantom();
-            previousCopy.to = currentCopy;
-            currentCopy.fromReal = newOrigin;
-            currentCopy.toReal = teleport.realTo();
-            currentCopy.from = previousCopy;
-            previousCopy = currentCopy;
-            currentOriginal = currentOriginalPhantom.to;
+    private GraphVertexPhantom getLast(final Teleport teleport) {
+        GraphVertexPhantom current = teleport.to();
+        while(current.to instanceof final GraphVertexPhantom currentTo) {
+            current = currentTo;
         }
-        final GraphVertexPhantom last = currentCopy;
-        last.to = teleport.realTo();
+        return current;
+    }
 
-        return last;
+    private void setTeleportOrigin(Teleport teleport, GraphVertexReal newOrigin) {
+        GraphVertex current = teleport.to();
+        ((GraphVertexPhantom) current).from = newOrigin;
+        while(current instanceof final GraphVertexPhantom currentPhantom) {
+            currentPhantom.fromReal = newOrigin;
+            current = currentPhantom.to;
+        }
     }
 
     private List<PathfinderResult.Movement> makePath(PathfindingQueueUnweighted.Entry forward, PathfindingQueueUnweighted.Entry backwards) {
@@ -222,5 +240,32 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
         }
 
         return path;
+    }
+
+    private Collection<Teleport> copyTeleports(Collection<Teleport> teleports) {
+        final List<Teleport> copies = new LinkedList<>();
+        for (Teleport teleport : teleports) {
+            final GraphVertexPhantom firstCopy = new GraphVertexPhantom();
+            firstCopy.toReal = teleport.realTo();
+
+            GraphVertex currentOriginal = teleport.to().to;
+            GraphVertexPhantom currentCopy = firstCopy;
+            GraphVertexPhantom previousyCopy = null;
+            while(currentOriginal instanceof final GraphVertexPhantom currentOriginalPhantom) {
+                previousyCopy = currentCopy;
+                currentCopy = new GraphVertexPhantom();
+
+                currentCopy.from = previousyCopy;
+                previousyCopy.to = currentCopy;
+                currentCopy.toReal = teleport.realTo();
+
+                currentOriginal = currentOriginalPhantom.to;
+            }
+            currentCopy.to = teleport.realTo();
+
+            final Teleport teleportCopy = new Teleport(firstCopy, teleport.title(), teleport.canTeleportUpTo30Wildy(), teleport.realTo());
+            copies.add(teleportCopy);
+        }
+        return copies;
     }
 }
