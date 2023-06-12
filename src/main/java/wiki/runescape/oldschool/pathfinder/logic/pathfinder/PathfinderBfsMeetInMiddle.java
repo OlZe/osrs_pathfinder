@@ -5,26 +5,18 @@ import wiki.runescape.oldschool.pathfinder.logic.graph.unweighted.*;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingQueueUnweighted;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-/**
- * WARNING: not optimal if the backwards search area includes multiple teleport destinations
- * by the time the forward search can process the teleports.
- */
 public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
-    private final Collection<Teleport> teleports20To30Wildy;
-    private final Collection<Teleport> teleportsTo20Wildy;
+    private final Map<GraphVertexReal, List<Teleport>> teleportsTo30Map;
+    private final Map<GraphVertexReal, List<Teleport>> teleportsTo20Map;
 
-    public PathfinderBfsMeetInMiddle(final Graph graph) {
-        super(graph);
-        this.teleports20To30Wildy = new ArrayList<>();
-        this.teleportsTo20Wildy = new ArrayList<>();
-        graph.teleports().forEach(teleport -> {
-            if (teleport.canTeleportUpTo30Wildy()) {
-                this.teleports20To30Wildy.add(teleport);
-            } else {
-                this.teleportsTo20Wildy.add(teleport);
-            }
-        });
+    public PathfinderBfsMeetInMiddle(final Graph unweightedGraph) {
+        super(unweightedGraph);
+        // Create copies as they will be modified by the search algorithm
+        final Collection<Teleport> teleportCopies = this.copyTeleports(unweightedGraph.teleports());
+        teleportsTo20Map = teleportCopies.stream().filter(tp -> !tp.canTeleportUpTo30Wildy()).collect(Collectors.groupingBy(Teleport::realTo));
+        teleportsTo30Map = teleportCopies.stream().filter(Teleport::canTeleportUpTo30Wildy).collect(Collectors.groupingBy(Teleport::realTo));
     }
 
     @Override
@@ -42,14 +34,22 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
         int searchRadiusBackwards = 0;
 
 
-        boolean addedTeleports20To30Wildy = false;
-        boolean addedTeleportsTo20Wildy = false;
+        GraphVertexReal closestVertexBelow20 = null;
+        GraphVertexReal closestVertexBelow30 = null;
 
         while (openListForwards.hasNext() || openListBackwards.hasNext()) {
-            final boolean searchForward = (searchRadiusForwards <= searchRadiusBackwards) || !openListBackwards.hasNext();
+            final boolean searchForward = (closestVertexBelow20 == null) // Search forward until wilderness exit
+                    || (searchRadiusForwards <= searchRadiusBackwards) // Search forward until circles are equal size
+                    || !openListBackwards.hasNext(); // Search forward if backwards is impossible
+
+            if (closestVertexBelow20 == null && !openListForwards.hasNext()) {
+                // Stuck in wilderness
+                return new PartialPathfinderResult(false, null, 0, closedListForwards.size() + closedListBackwards.size(), openListForwards.size() + openListBackwards.size());
+            }
+
             if (searchForward) {
                 // Advance searchRadiusForwards by 1 step
-                while(openListForwards.hasNext() && openListForwards.peek().totalCostX2() == searchRadiusForwards) {
+                while (openListForwards.hasNext() && openListForwards.peek().totalCostX2() == searchRadiusForwards) {
                     final PathfindingQueueUnweighted.Entry currentEntry = openListForwards.dequeue();
                     if (closedListForwards.containsKey(currentEntry.vertex())) {
                         continue;
@@ -67,7 +67,7 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                                 openListForwards.size() + openListBackwards.size());
                     }
 
-                    if(currentEntry.vertex() instanceof final GraphVertexReal currentVertexReal) {
+                    if (currentEntry.vertex() instanceof final GraphVertexReal currentVertexReal) {
                         // Add forward neighbours to openList
                         for (GraphEdge edgeOut : currentVertexReal.edgesOut()) {
                             if (!blacklist.contains(edgeOut.title()) && !closedListForwards.containsKey(edgeOut.realTo())) {
@@ -75,30 +75,51 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                             }
                         }
 
-                        // If teleports haven't been added, add them to openListForwards, depending on wildy level
-                        final boolean addTeleports20To30Wildy = !addedTeleports20To30Wildy && !(currentVertexReal.wildernessLevel().equals(WildernessLevels.ABOVE30));
-                        if (addTeleports20To30Wildy) {
-                            for (Teleport teleport : this.teleports20To30Wildy) {
-                                if (!blacklist.contains(teleport.title()) && !closedListForwards.containsKey(teleport.realTo())) {
-                                    openListForwards.enqueue(teleport.to(), currentEntry, teleport.title(), false);
+                        // Lvl 20 exit found?
+                        if (closestVertexBelow20 == null && currentVertexReal.wildernessLevel() == WildernessLevels.BELOW20) {
+                            closestVertexBelow20 = currentVertexReal;
+
+                            // Set teleports to originate from closestVertexBelow20
+                            for (List<Teleport> teleports : teleportsTo20Map.values()) {
+                                for (Teleport teleport : teleports) {
+                                    this.setTeleportOrigin(teleport, closestVertexBelow20);
                                 }
                             }
-                            addedTeleports20To30Wildy = true;
+
+                            // Enqueue lvl 20 teleports
+                            for (List<Teleport> teleports : teleportsTo20Map.values()) {
+                                for (Teleport teleport : teleports) {
+                                    if(!blacklist.contains(teleport.title()) && !closedListForwards.containsKey(teleport.realTo())) {
+                                        openListForwards.enqueue(teleport.to(), currentEntry, teleport.title(), false);
+                                    }
+                                }
+                            }
                         }
-                        final boolean addTeleportsTo20Wildy = !addedTeleportsTo20Wildy && currentVertexReal.wildernessLevel().equals(WildernessLevels.BELOW20);
-                        if (addTeleportsTo20Wildy) {
-                            for (Teleport teleport : this.teleportsTo20Wildy) {
-                                if (!blacklist.contains(teleport.title()) && !closedListForwards.containsKey(teleport.realTo())) {
-                                    openListForwards.enqueue(teleport.to(), currentEntry, teleport.title(), false);
+                        // Lvl 30 exit found?
+                        if (closestVertexBelow30 == null && currentVertexReal.wildernessLevel() != WildernessLevels.ABOVE30) {
+                            closestVertexBelow30 = currentVertexReal;
+
+                            // Set teleports to originate from lvl 30 exit
+                            for (List<Teleport> teleports : this.teleportsTo30Map.values()) {
+                                for (Teleport teleport : teleports) {
+                                    this.setTeleportOrigin(teleport, closestVertexBelow30);
                                 }
                             }
-                            addedTeleportsTo20Wildy = true;
+
+                            // Enqueue lvl 30 teleports
+                            for (List<Teleport> teleports : teleportsTo30Map.values()) {
+                                for (Teleport teleport : teleports) {
+                                    if(!blacklist.contains(teleport.title()) && !closedListForwards.containsKey(teleport.realTo())) {
+                                        openListForwards.enqueue(teleport.to(), currentEntry, teleport.title(), false);
+                                    }
+                                }
+                            }
                         }
                     } else {
                         // currentVertex is instance of GraphVertexPhantom
                         // Add successor to openList
                         final GraphVertexPhantom currentVertexPhantom = (GraphVertexPhantom) currentEntry.vertex();
-                        if(!closedListForwards.containsKey(currentVertexPhantom.toReal)) {
+                        if (!closedListForwards.containsKey(currentVertexPhantom.toReal)) {
                             openListForwards.enqueue(currentVertexPhantom.to, currentEntry, currentEntry.edgeTitle(), false);
                         }
                     }
@@ -106,7 +127,7 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                 searchRadiusForwards++;
             } else {
                 // Advance searchRadiusBackwards by 1 step
-                while(openListBackwards.hasNext() && openListBackwards.peek().totalCostX2() == searchRadiusBackwards) {
+                while (openListBackwards.hasNext() && openListBackwards.peek().totalCostX2() == searchRadiusBackwards) {
                     final PathfindingQueueUnweighted.Entry currentEntry = openListBackwards.dequeue();
 
                     if (closedListBackwards.containsKey(currentEntry.vertex())) {
@@ -125,18 +146,37 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
                                 openListForwards.size() + openListBackwards.size());
                     }
 
-                    if(currentEntry.vertex() instanceof final GraphVertexReal currentVertexReal) {
+                    if (currentEntry.vertex() instanceof final GraphVertexReal currentVertexReal) {
                         // Add predecessors to openListBackwards
                         for (GraphEdge edgeIn : currentVertexReal.edgesIn()) {
                             if (!blacklist.contains(edgeIn.title()) && !closedListBackwards.containsKey(edgeIn.realFrom())) {
                                 openListBackwards.enqueue(edgeIn.from(), currentEntry, edgeIn.title(), edgeIn.isWalking());
                             }
                         }
-                    }
-                    else {
+
+                        // If a teleports go here, enqueue them
+                        final List<Teleport> teleportsUpTo30Here = this.teleportsTo30Map.get(currentVertexReal);
+                        if(teleportsUpTo30Here != null && !closedListBackwards.containsKey(closestVertexBelow30)) {
+                            for (Teleport teleportUpTo30Here : teleportsUpTo30Here) {
+                                if(!blacklist.contains(teleportUpTo30Here.title())) {
+                                    final GraphVertexPhantom lastVertex = this.getLast(teleportUpTo30Here);
+                                    openListBackwards.enqueue(lastVertex, currentEntry, teleportUpTo30Here.title(), false);
+                                }
+                            }
+                        }
+                        final List<Teleport> teleportsUpTo20Here = this.teleportsTo20Map.get(currentVertexReal);
+                        if(teleportsUpTo20Here != null && !closedListBackwards.containsKey(closestVertexBelow20)) {
+                            for (Teleport teleportUpTo20Here : teleportsUpTo20Here) {
+                                if(!blacklist.contains(teleportUpTo20Here.title())) {
+                                    final GraphVertexPhantom lastVertex = this.getLast(teleportUpTo20Here);
+                                    openListBackwards.enqueue(lastVertex, currentEntry, teleportUpTo20Here.title(), false);
+                                }
+                            }
+                        }
+                    } else {
                         // vertex is instance of GraphVertexPhantom
                         final GraphVertexPhantom currentVertexPhantom = (GraphVertexPhantom) currentEntry.vertex();
-                        if(!closedListBackwards.containsKey(currentVertexPhantom.fromReal)) {
+                        if (!closedListBackwards.containsKey(currentVertexPhantom.fromReal)) {
                             openListBackwards.enqueue(currentVertexPhantom.from, currentEntry, currentEntry.edgeTitle(), false);
                         }
                     }
@@ -159,24 +199,24 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
 
         PathfindingQueueUnweighted.Entry current = forward;
         while (current != null) {
-            if(current.vertex() instanceof final GraphVertexReal currentVertex) {
+            if (current.vertex() instanceof final GraphVertexReal currentVertex) {
                 path.addFirst(new PathfinderResult.Movement(currentVertex.coordinate(), current.edgeTitle()));
             }
             current = current.previous();
         }
 
-        if(backwards.previous() == null) {
+        if (backwards.previous() == null) {
             return path;
         }
 
         PathfindingQueueUnweighted.Entry before = backwards;
         current = backwards.previous();
-        while(current.vertex() instanceof GraphVertexPhantom) {
+        while (current.vertex() instanceof GraphVertexPhantom) {
             current = current.previous();
         }
 
         while (current != null) {
-            if(current.vertex() instanceof final GraphVertexReal currentVertex) {
+            if (current.vertex() instanceof final GraphVertexReal currentVertex) {
                 path.addLast(new PathfinderResult.Movement(currentVertex.coordinate(), before.edgeTitle()));
                 before = current;
             }
@@ -184,5 +224,49 @@ public class PathfinderBfsMeetInMiddle extends PathfinderUnweighted {
         }
 
         return path;
+    }
+
+    private Collection<Teleport> copyTeleports(Collection<Teleport> teleports) {
+        final List<Teleport> copies = new LinkedList<>();
+        for (Teleport teleport : teleports) {
+            final GraphVertexPhantom firstCopy = new GraphVertexPhantom();
+            firstCopy.toReal = teleport.realTo();
+
+            GraphVertex currentOriginal = teleport.to().to;
+            GraphVertexPhantom currentCopy = firstCopy;
+            GraphVertexPhantom previousCopy = null;
+            while (currentOriginal instanceof final GraphVertexPhantom currentOriginalPhantom) {
+                previousCopy = currentCopy;
+                currentCopy = new GraphVertexPhantom();
+
+                currentCopy.from = previousCopy;
+                previousCopy.to = currentCopy;
+                currentCopy.toReal = teleport.realTo();
+
+                currentOriginal = currentOriginalPhantom.to;
+            }
+            currentCopy.to = teleport.realTo();
+
+            final Teleport teleportCopy = new Teleport(firstCopy, teleport.title(), teleport.canTeleportUpTo30Wildy(), teleport.realTo());
+            copies.add(teleportCopy);
+        }
+        return copies;
+    }
+
+    private void setTeleportOrigin(Teleport teleport, GraphVertexReal newOrigin) {
+        GraphVertex current = teleport.to();
+        ((GraphVertexPhantom) current).from = newOrigin;
+        while (current instanceof final GraphVertexPhantom currentPhantom) {
+            currentPhantom.fromReal = newOrigin;
+            current = currentPhantom.to;
+        }
+    }
+
+    private GraphVertexPhantom getLast(final Teleport teleport) {
+        GraphVertexPhantom current = teleport.to();
+        while (current.to instanceof final GraphVertexPhantom currentTo) {
+            current = currentTo;
+        }
+        return current;
     }
 }

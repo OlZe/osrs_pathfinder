@@ -68,9 +68,7 @@ public class PathfinderBfsMeetAtTeleport extends PathfinderUnweighted {
                             for (Teleport teleport : teleports) {
                                 this.setTeleportOrigin(teleport, closestVertexBelow20);
                             }
-
                         }
-
 
                         // If no closestVertexBelow30 has been found yet, use closestVertexBelow20 as it is faster
                         if (closestVertexBelow30 == null) {
