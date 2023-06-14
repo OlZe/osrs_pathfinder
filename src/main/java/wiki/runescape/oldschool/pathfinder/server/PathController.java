@@ -1,6 +1,7 @@
 package wiki.runescape.oldschool.pathfinder.server;
 
 import org.springframework.web.bind.annotation.*;
+import wiki.runescape.oldschool.pathfinder.logic.Coordinate;
 import wiki.runescape.oldschool.pathfinder.logic.graph.Graph;
 import wiki.runescape.oldschool.pathfinder.logic.graph.GraphBuilder;
 import wiki.runescape.oldschool.pathfinder.logic.pathfinder.*;
@@ -9,8 +10,10 @@ import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingBucketQueue;
 import wiki.runescape.oldschool.pathfinder.logic.queues.PathfindingPriorityQueue;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Random;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -30,7 +33,7 @@ public class PathController {
             "BFS-Backwards / UnweightedQueue", new PathfinderBfsBackwards(unweightedGraph),
             "BFS-MeetInMiddle / UnweightedQueue", new PathfinderBfsMeetInMiddle(unweightedGraph),
             "BFS-MeetAtTeleport / UnweightedQueue", new PathfinderBfsMeetAtTeleport(unweightedGraph)
-            );
+    );
 
     public PathController() throws IOException {
     }
@@ -59,6 +62,22 @@ public class PathController {
     @GetMapping("api/algorithms.json")
     public Collection<String> getAllAlgorithms() {
         return ALGORITHM_STRING_TO_CLASS.keySet();
+    }
+
+    @GetMapping("api/debug/randomStartEndCoordinates.json")
+    public CoordinatePair getRandomStartEndVertices() {
+        final ArrayList<Coordinate> coordinates = new ArrayList<>(this.graph.vertices().keySet());
+        final Random random = new Random();
+        final int i1 = random.nextInt(coordinates.size());
+        final int i2 = random.nextInt(coordinates.size());
+        return new CoordinatePair(coordinates.get(i1), coordinates.get(i2));
+    }
+
+
+    public record CoordinatePair(
+            Coordinate start,
+            Coordinate end
+    ) {
     }
 }
 
