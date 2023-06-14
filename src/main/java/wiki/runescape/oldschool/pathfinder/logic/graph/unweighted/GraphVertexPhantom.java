@@ -7,8 +7,6 @@ public class GraphVertexPhantom implements GraphVertex {
     public GraphVertexReal fromReal;
     public GraphVertexReal toReal;
 
-    private final int hashCode = System.identityHashCode(this);
-
     @Override
     public String toString() {
         return "Phantom Vertex";
@@ -16,6 +14,6 @@ public class GraphVertexPhantom implements GraphVertex {
 
     @Override
     public int hashCode() {
-        return this.hashCode;
+        return System.identityHashCode(this);
     }
 }

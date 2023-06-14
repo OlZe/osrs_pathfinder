@@ -11,8 +11,6 @@ public final class GraphVertex {
     private final List<GraphEdge> edgesOut;
     private final List<GraphEdge> edgesIn;
     private final WildernessLevels wildernessLevel;
-    private final int hashCode;
-
     public GraphVertex(
             Coordinate coordinate,
             List<GraphEdge> edgesOut,
@@ -22,7 +20,6 @@ public final class GraphVertex {
         this.edgesOut = edgesOut;
         this.edgesIn = edgesIn;
         this.wildernessLevel = wildernessLevel;
-        this.hashCode = System.identityHashCode(this);
     }
 
 
@@ -68,7 +65,7 @@ public final class GraphVertex {
 
     @Override
     public int hashCode() {
-        return hashCode;
+        return System.identityHashCode(this);
     }
 
     public Coordinate coordinate() {
