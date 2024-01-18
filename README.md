@@ -8,7 +8,7 @@ The webserver reads previously dumped OSRS map data to build a graph and perform
 
 # Usage
 
-Run `git submodule update --remote --recursive` which can take several minutes
+Run `git submodule update --init --remote --recursive` which can take several minutes
 
 Run this project as a Spring Boot application.
 
